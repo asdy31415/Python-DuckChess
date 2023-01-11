@@ -47,6 +47,7 @@ UNICODE_PIECE_SYMBOLS = {
     "Q": "♕", "q": "♛",
     "K": "♔", "k": "♚",
     "P": "♙", "p": "♟",
+    "@": "@", "@": "@"
 }
 
 FILE_NAMES = ["a", "b", "c", "d", "e", "f", "g", "h"]
@@ -384,3 +385,73 @@ def _carry_rippler(mask: Bitboard) -> Iterator[Bitboard]:
         subset = (subset - mask) & mask
         if not subset:
             break
+
+def _attack_table(deltas: List[int]) -> Tuple[List[Bitboard], List[Dict[Bitboard, Bitboard]]]:
+    mask_table = []
+    attack_table = []
+
+    for square in SQUARES:
+        attacks = {}
+
+        mask = _sliding_attacks(square, 0, deltas) & ~_edges(square)
+        for subset in _carry_rippler(mask):
+            attacks[subset] = _sliding_attacks(square, subset, deltas)
+
+        attack_table.append(attacks)
+        mask_table.append(mask)
+
+    return mask_table, attack_table
+
+BB_DIAG_MASKS, BB_DIAG_ATTACKS = _attack_table([-9, -7, 7, 9])
+BB_FILE_MASKS, BB_FILE_ATTACKS = _attack_table([-8, 8])
+BB_RANK_MASKS, BB_RANK_ATTACKS = _attack_table([-1, 1])
+
+
+def _rays() -> List[List[Bitboard]]:
+    rays = []
+    for a, bb_a in enumerate(BB_SQUARES):
+        rays_row = []
+        for b, bb_b in enumerate(BB_SQUARES):
+            if BB_DIAG_ATTACKS[a][0] & bb_b:
+                rays_row.append((BB_DIAG_ATTACKS[a][0] & BB_DIAG_ATTACKS[b][0]) | bb_a | bb_b)
+            elif BB_RANK_ATTACKS[a][0] & bb_b:
+                rays_row.append(BB_RANK_ATTACKS[a][0] | bb_a)
+            elif BB_FILE_ATTACKS[a][0] & bb_b:
+                rays_row.append(BB_FILE_ATTACKS[a][0] | bb_a)
+            else:
+                rays_row.append(BB_EMPTY)
+        rays.append(rays_row)
+    return rays
+
+BB_RAYS = _rays()
+
+def ray(a: Square, b: Square) -> Bitboard:
+    return BB_RAYS[a][b]
+
+def between(a: Square, b: Square) -> Bitboard:
+    bb = BB_RAYS[a][b] & ((BB_ALL << a) ^ (BB_ALL << b))
+    return bb & (bb - 1)
+
+
+SAN_REGEX = re.compile(r"^([NBKRQ])?([a-h])?([1-8])?[\-x]?([a-h][1-8])(=?[nbrqkNBRQK])?[\+#]?\Z")
+
+FEN_CASTLING_REGEX = re.compile(r"^(?:-|[KQABCDEFGH]{0,2}[kqabcdefgh]{0,2})\Z")
+
+
+@dataclasses.dataclass
+class Piece:
+
+
+    piece_type: PieceType
+
+
+    color: Color
+
+    def symbol(self) -> str:
+
+        symbol = piece_symbol(self.piece_type)
+        return symbol.upper() if self.color == 1 else symbol
+
+    def unicode_symbol (self, *, invert_color: bool = False) -> str:
+
+        symbol = self.symbol().swapcase() if invert_color else self.symbol()
