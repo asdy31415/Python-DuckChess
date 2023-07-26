@@ -71,11 +71,17 @@ class Decode :
         return Square
 
 class Board:
-    def occupied(Square: square) :
+    def occupied(Square: square, Color) :
         oc = []
         for i, square in enumerate(BOARD) :
-            if square != "." :
-                oc.append(i)
+            match Color :
+                case None :
+                    
+                case 0 :
+                    
+                case 1 :
+               
+                
         for j in oc :
             if Square == oc :
                 return True
@@ -176,7 +182,7 @@ class Map :
 
         return
 
-    def occupied()
+    def occupied() :
     
 class PieceMap :
 
