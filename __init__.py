@@ -1,6 +1,7 @@
 from ast import If
 import collections
 import copy
+from curses.ascii import islower
 import dataclasses
 import enum
 import math
@@ -14,9 +15,17 @@ from typing import ClassVar, Callable, Counter, Dict, Generic, Hashable, Iterabl
 
 square = int
 
+color = int
+
 RANKS_NAME = ["a", "b", "c", "d", "e", "f", "g", "h"]
 
 FILES_NAME = ["1", "2", "3", "4", "5", "6", "7", "8"]
+
+COLORS_NAME = ["white", "black", "yellow", "none"] #lower, upper, @, .
+
+PIECES_NAME = ["k" ,"q" ,"r", "b", "n", "p", "@"]
+
+PIECES_UNICODE= []
 
 SQUARES = [
     A1, B1, C1, D1, E1, F1, G1, H1,
@@ -28,6 +37,8 @@ SQUARES = [
     A7, B7, C7, D7, E7, F7, G7, H7,
     A8, B8, C8, D8, E8, F8, G8, H8,
     ] = range(64)
+
+COLORS = [white, black ,yellow, none] = range(4)
 
 SQUARES_NAME = [f + r for r in RANKS_NAME for f in FILES_NAME]
 
@@ -71,27 +82,23 @@ class Decode :
         return Square
 
 class Board:
-    def occupied(Square: square, Color) :
-        oc = []
-        for i, square in enumerate(BOARD) :
-            match Color :
-                case None :
-                    
-                case 0 :
-                    
-                case 1 :
-               
-                
-        for j in oc :
-            if Square == oc :
+
+    def occupied(Square: square, *Color: color) :
+        if Color == None :
+            if Map.colorMap[Square] == 3 :
+                return False
+            else :
                 return True
-            break
-        return False
+        if Map.colorMap[Square] == Color or Map.colorMap[Square] == 3 :
+            return False
+        else :
+            return True
+
 
 
 class Moves :
 
-    def diagnal(Square: square, attack) :
+    def diagnal(Square: square, Color: color, *attack) :
         moves = []
         attacks = [] 
         offsets = [7, -7, 9, -9]
@@ -99,19 +106,15 @@ class Moves :
         for offset in offsets :
             move = Square + offset
             while move in range(64) and not (offset == -7 and move % 8 == 7) or (offset == -9 and move % 8 == 0) or  not (offset == 7 and move % 8 == 0) or (offset == 9 and move % 8 == 7) :
-                if not Board.occupied(Square) :
+                if not Board.occupied(Square, Color) :
                     moves.append(move)
-                    move += offset
-                else :
-                    attacks.append(move)
-                    break
 
         if attack :
             return attacks
         else :
             return moves
 
-    def straight(Square: square, attack) :
+    def straight(Square: square, Color, *attack) :
         moves = []
         attacks = [] 
         offsets = [1,-1,8,-8]
@@ -131,7 +134,7 @@ class Moves :
         else :
             return moves
 
-    def knight(Square: square, attack) :
+    def knight(Square: square, Color: color, *attack) :
         moves = []
         attacks = [] 
         offsets = [6, 10, 15, 17, -6, -10, -15, -17]
@@ -139,7 +142,7 @@ class Moves :
         for offset in offsets :
             move = Square + offset
             if move in range(64) and abs(move % 8 - Square % 8) <= 2 and abs(move // 8 - Square // 8) <= 2 :
-                if not Board.occupied(Square) :
+                if not Board.occupied(Square, Color) :
                     moves.append(move)
                 else :
                     attacks.append(move)
@@ -165,8 +168,8 @@ class Moves :
                     move.append(move)
                 else :
                     attacks.append(move)
-
         return
+
 
 class Map :
 
@@ -182,7 +185,19 @@ class Map :
 
         return
 
-    def occupied() :
+    def MapColor() :
+        colorMap = EMPTY
+        for i, Square in enumerate(BOARD) :
+            if Square.islower() :
+                colorMap[i] = 0
+            elif Square.isupper() :
+                colorMap[i] = 1
+            elif Square == "@" :
+                colorMap[i] = 2
+            else :
+                colorMap[i] = 3
+        return
+                
     
 class PieceMap :
 
