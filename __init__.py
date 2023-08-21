@@ -1,14 +1,15 @@
-from ast import If
+﻿from ast import If
 import collections
 import copy
-from curses.ascii import islower
+from curses.ascii import isdigit
 import dataclasses
 import enum
 import math
-from msilib.schema import Class
 import re
 import itertools
 from string import octdigits
+import string
+from tkinter.messagebox import RETRY
 import typing
 
 from typing import ClassVar, Callable, Counter, Dict, Generic, Hashable, Iterable, Iterator, List, Mapping, Optional, SupportsInt, Tuple, Type, TypeVar, Union
@@ -17,15 +18,22 @@ square = int
 
 color = int
 
+piece = int
+
+
 RANKS_NAME = ["a", "b", "c", "d", "e", "f", "g", "h"]
 
 FILES_NAME = ["1", "2", "3", "4", "5", "6", "7", "8"]
 
-COLORS_NAME = ["white", "black", "yellow", "none"] #lower, upper, @, .
+SQUARES_NAME = [f + r for r in RANKS_NAME for f in FILES_NAME]
 
-PIECES_NAME = ["k" ,"q" ,"r", "b", "n", "p", "@"]
+COLORS_NAME = ["white", "black", "yellow", "none"] #upper, lower, @, .
 
-PIECES_UNICODE= []
+PIECES_TYPE_NAME = ["k" ,"q" ,"r", "n", "b", "p", "@", "."]
+
+PIECES_NAME = ["K", "Q", "R", "N", "B", "P", "k", "q", "r", "n", "b" , "p", "d", "."]
+
+PIECES_UNICODE= ["♔", "♕", "♖", "♘", "♗", "♙", "♚", "♛", "♜", "♞", "♝", "♟︎", "🦆", "."]
 
 SQUARES = [
     A1, B1, C1, D1, E1, F1, G1, H1,
@@ -40,17 +48,34 @@ SQUARES = [
 
 COLORS = [white, black ,yellow, none] = range(4)
 
-SQUARES_NAME = [f + r for r in RANKS_NAME for f in FILES_NAME]
+PIECETYPES = [k, q, r, n, b, p, d] = range (8)
 
-EMPTY = [".", ".", ".", ".", ".", ".", ".", ".",
-         ".", ".", ".", ".", ".", ".", ".", ".",
-         ".", ".", ".", ".", ".", ".", ".", ".",
-         ".", ".", ".", ".", ".", ".", ".", ".",
-         ".", ".", ".", ".", ".", ".", ".", ".",
-         ".", ".", ".", ".", ".", ".", ".", ".",
-         ".", ".", ".", ".", ".", ".", ".", ".",
-         ".", ".", ".", ".", ".", ".", ".", ".",
-         ]
+PIECES = [K, Q, R, N, B, P, k, q, r, n, b, p, d, space] = range(14)
+
+PASSANT = int
+
+
+DISPLAY = [
+    ".", ".", ".", ".", ".", ".", ".", ".",
+    ".", ".", ".", ".", ".", ".", ".", ".",
+    ".", ".", ".", ".", ".", ".", ".", ".",
+    ".", ".", ".", ".", ".", ".", ".", ".",
+    ".", ".", ".", ".", ".", ".", ".", ".",
+    ".", ".", ".", ".", ".", ".", ".", ".",
+    ".", ".", ".", ".", ".", ".", ".", ".",
+    ".", ".", ".", ".", ".", ".", ".", ".",
+    ]
+
+EMPTY = [
+    13,13,13,13,13,13,13,13,
+    13,13,13,13,13,13,13,13,
+    13,13,13,13,13,13,13,13,
+    13,13,13,13,13,13,13,13,
+    13,13,13,13,13,13,13,13,
+    13,13,13,13,13,13,13,13,
+    13,13,13,13,13,13,13,13,
+    13,13,13,13,13,13,13,13,
+    ]
 
 BOARD = [
     B_A1, B_B1, B_C1, B_D1, B_E1, B_F1, B_G1, B_H1,
@@ -61,11 +86,12 @@ BOARD = [
     B_A6, B_B6, B_C6, B_D6, B_E6, B_F6, B_G6, B_H6,
     B_A7, B_B7, B_C7, B_D7, B_E7, B_F7, B_G7, B_H7,
     B_A8, B_B8, B_C8, B_D8, B_E8, B_F8, B_G8, B_H8,
-    ] = EMPTY
+    ] = list(EMPTY)
 
 class Decode :
 
     #convert The name of a square to its coordinate
+    @staticmethod
     def SquareN(Square) :
         for i, rank in enumerate(RANKS_NAME) :
             if rank == Square[0].lower() :
@@ -73,108 +99,63 @@ class Decode :
         return None
 
     #return the square's rank
-    def Rank(Square: square) :
-        Square = Square % 8 + 1
+    def File(Square: square) :
+        Square = Square % 8
         return Square
 
-    def File(Square: square) :
+    def Rank(Square: square) :
         Square = Square // 8
         return Square
-
-class Board:
-
-    def occupied(Square: square, *Color: color) :
-        if Color == None :
-            if Map.colorMap[Square] == 3 :
-                return False
-            else :
-                return True
-        if Map.colorMap[Square] == Color or Map.colorMap[Square] == 3 :
-            return False
-        else :
-            return True
-
-
-
-class Moves :
-
-    def diagnal(Square: square, Color: color, *attack) :
-        moves = []
-        attacks = [] 
-        offsets = [7, -7, 9, -9]
-
-        for offset in offsets :
-            move = Square + offset
-            while move in range(64) and not (offset == -7 and move % 8 == 7) or (offset == -9 and move % 8 == 0) or  not (offset == 7 and move % 8 == 0) or (offset == 9 and move % 8 == 7) :
-                if not Board.occupied(Square, Color) :
-                    moves.append(move)
-
-        if attack :
-            return attacks
-        else :
-            return moves
-
-    def straight(Square: square, Color, *attack) :
-        moves = []
-        attacks = [] 
-        offsets = [1,-1,8,-8]
-
-        for offset in offsets :
-            move = Square + offset
-            while move in range(64) and (move // 8 == Square // 8 or offset == 8 or offset == -8) :
-                    if not Board.occupied(Square) :
-                        moves.append(move)
-                        move += offset
-                    else :
-                        attacks.append(move)
-                        break
-
-        if attack :
-            return attacks
-        else :
-            return moves
-
-    def knight(Square: square, Color: color, *attack) :
-        moves = []
-        attacks = [] 
-        offsets = [6, 10, 15, 17, -6, -10, -15, -17]
-
-        for offset in offsets :
-            move = Square + offset
-            if move in range(64) and abs(move % 8 - Square % 8) <= 2 and abs(move // 8 - Square // 8) <= 2 :
-                if not Board.occupied(Square, Color) :
-                    moves.append(move)
-                else :
-                    attacks.append(move)
-
-        if attack :
-            return attacks
-        else :
-            return moves
     
-    def pawn() :
+    @staticmethod
+    def OnEdge(Square: square) :
+        return Decode.Rank(Square) in [0, 7] or Decode.File(Square) in [0, 7]
 
-        return
+    @staticmethod
+    def FEN_to_BOARD(self, fen, part) :
+        fen_parts = fen.split()
+        match part :
+            case 0 :
+                fen_board = fen_parts[0]
+                board = []
 
-    def king(Square: square, attack) :
-        moves = []
-        attacks = []
-        offsets = [-9, -8, -7, -1 , 1, 7, 8, 9]
-        
-        for offset in offsets :
-            move = Square + offset
-            if move in range(64) and abs(move % 8 - Square % 8) <= 1 and abs(move // 8 - Square // 8) <= 1 :
-                if not Board.occupied(Square) :
-                    move.append(move)
+                for char in fen_board :
+                    if char.isdigit() :
+                        board.extend([13] * int(char))
+                    elif char in PIECES_NAME :
+                        board.append(PIECES_NAME.index(char))
+                return board
+            case 1 :
+                if fen_parts[1] == "w" :
+                    return 0
                 else :
-                    attacks.append(move)
-        return
+                    return 1
+            case 2 :
+                fen_castle = fen_parts[2]
+                all_castle = ["K", "Q", "k", "q"]
+                castle = [False, False, False, False]
+                for i, char in enumerate(castle) :
+                    if char == fen_castle[i] :
+                        castle[i] = True
+                return castle
+            case 3 :
+                if fen_parts[3] == "-" :
+                    return None
+                else :
+                    return Decode.SquareN()
+            case _ :
+                return fen_parts[part]
 
+
+
+    @staticmethod
+    def BOARD_to_FEN() :
+        return
 
 class Map :
 
     def attack() :
-
+        
         return
 
     def defend() :
@@ -184,20 +165,158 @@ class Map :
     def passentable() :
 
         return
-
-    def MapColor() :
-        colorMap = EMPTY
+    
+    @staticmethod
+    def ColorType() : 
+        colorMap = list(EMPTY)
         for i, Square in enumerate(BOARD) :
-            if Square.islower() :
+            if Square <= 5 :
                 colorMap[i] = 0
-            elif Square.isupper() :
+            elif Square <= 11 :
                 colorMap[i] = 1
-            elif Square == "@" :
+            elif Square == 12 :
                 colorMap[i] = 2
             else :
                 colorMap[i] = 3
-        return
-                
-    
-class PieceMap :
+        return colorMap
 
+    @staticmethod
+    def PieceType() :
+        typeMap = list(EMPTY)
+        for i, Square in enumerate(BOARD) :
+            if Square == 12 :
+                typeMap[i] = 7
+            elif Square == 13 :
+                typeMap[i] = None
+            else :
+                typeMap[i] = Square % 8
+        return typeMap
+
+
+class Moves :
+
+    def diagnal(Square: square, Color: color, attack = None) :
+        moves = []
+        attacks = [] 
+        offsets = [7, -7, 9, -9]
+
+        for offset in offsets :
+            move = Square + offset
+            while move in range(64) and abs(move % 8 - Square % 8) == abs(move // 8 - Square // 8):
+                if Map.ColorType()[move] == 3 :
+                    moves.append(move)
+                    move += offset
+                elif Map.ColorType()[move] == int(not bool(Color)) :
+                    attacks.append(move)
+                    break
+
+        if attack :
+            return attacks
+        else :
+            return moves
+
+    def straight(Square: square, Color: color, attack = None) :
+        moves = []
+        attacks = [] 
+        offsets = [1,-1,8,-8]
+
+        for offset in offsets :
+            move = Square + offset
+            while move in range(64) and (Square // 8 == move // 8 or Square % 8 == move % 8):
+                if Map.ColorType()[move] == 3 :
+                    moves.append(move)
+                    move += offset
+                elif Map.ColorType()[move] == int(not bool(Color)) :
+                    attacks.append(move)
+                    break
+
+        if attack :
+            return attacks
+        else :
+            return moves
+
+    def knight(Square: square, Color: color, attack = None) :
+        moves = []
+        attacks = [] 
+        offsets = [6, 10, 15, 17, -6, -10, -15, -17]
+
+        for offset in offsets :
+            move = Square + offset
+            if move in range(64) and abs(move % 8 - Square % 8) <= 2 and abs(move // 8 - Square // 8) <= 2 :
+                if Map.ColorType()[move] == 3 :
+                    moves.append(move)
+                elif Map.ColorType()[move] == int(not bool(Color)) :
+                    attacks.append(move)
+
+        if attack :
+            return attacks
+        else :
+            return moves
+    
+    def pawn(Square: square, Color: color, attack = None) :
+        moves = []
+        attacks = []
+        offsets = []
+        atteckoffsets = [1, -1]
+        foward = 0
+
+        if bool(Color) :
+               foward = -8
+        else :
+               foward = 8
+
+        if attack :
+            for offset in atteckoffsets :
+                offsets.append(foward + offset)
+        else :
+            if Square < 15 or Square > 48 :
+               offsets.append(foward * 2)
+            offsets.append(foward)
+
+            
+        for offset in offsets :
+            move = Square + offset
+            if move in range(64) and abs(Square % 8 - move % 8) <= 1 :
+                if Map.ColorType()[move] == 3 :
+                    moves.append(move)
+                elif Map.ColorType()[move] == int(not bool(Color)) :
+                    attacks.append(move)
+        
+        if attack :
+            return attacks
+        else :
+            return moves
+
+    def king(Square: square, Color: color, attack = None) :
+        moves = []
+        attacks = []
+        offsets = [-9, -8, -7, -1 , 1, 7, 8, 9]
+        
+        for offset in offsets :
+            move = Square + offset
+            if move in range(64) and (abs(move // 8 - Square // 8) <= 1 or abs(move % 8 - Square % 8) <= 1) :
+                if Map.ColorType()[move] == 3 :
+                    moves.append(move)
+                elif Map.ColorType()[move] == int(not bool(Color)) or Map.passentable :
+                    attacks.append(move)
+
+        if attack :
+            return attacks
+        else :
+            return moves
+
+class Game :
+
+
+
+    def initial():
+        DuckClock = bool
+        HalfClock = int
+        FullClock = int
+
+    def Push() :
+        return
+
+
+
+    
