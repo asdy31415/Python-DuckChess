@@ -1,18 +1,5 @@
-﻿from ast import If
-import collections
-import copy
-from curses.ascii import isdigit
-import dataclasses
-import enum
-import math
-import re
-import itertools
-from string import octdigits
-import string
-from tkinter.messagebox import RETRY
-import typing
+﻿import stat
 
-from typing import ClassVar, Callable, Counter, Dict, Generic, Hashable, Iterable, Iterator, List, Mapping, Optional, SupportsInt, Tuple, Type, TypeVar, Union
 
 square = int
 
@@ -77,7 +64,9 @@ EMPTY = [
     13,13,13,13,13,13,13,13,
     ]
 
-BOARD = [
+
+class Board :
+    B_BOARD = [
     B_A1, B_B1, B_C1, B_D1, B_E1, B_F1, B_G1, B_H1,
     B_A2, B_B2, B_C2, B_D2, B_E2, B_F2, B_G2, B_H2,
     B_A3, B_B3, B_C3, B_D3, B_E3, B_F3, B_G3, B_H3,
@@ -87,6 +76,14 @@ BOARD = [
     B_A7, B_B7, B_C7, B_D7, B_E7, B_F7, B_G7, B_H7,
     B_A8, B_B8, B_C8, B_D8, B_E8, B_F8, B_G8, B_H8,
     ] = list(EMPTY)
+
+    B_Passent = int
+
+    B_Castle = [bool, bool, bool, bool]
+
+    B_HalfClock = int
+
+    B_FullClock = int
 
 class Decode :
 
@@ -112,7 +109,7 @@ class Decode :
         return Decode.Rank(Square) in [0, 7] or Decode.File(Square) in [0, 7]
 
     @staticmethod
-    def FEN_to_BOARD(self, fen, part) :
+    def FEN_to_BOARD(fen, part) :
         fen_parts = fen.split()
         match part :
             case 0 :
@@ -142,7 +139,7 @@ class Decode :
                 if fen_parts[3] == "-" :
                     return None
                 else :
-                    return Decode.SquareN()
+                    return Decode.SquareN(fen_parts[3])
             case _ :
                 return fen_parts[part]
 
@@ -154,22 +151,52 @@ class Decode :
 
 class Map :
 
-    def attack() :
-        
-        return
+    @staticmethod
+    def attack(Square: square) :
+        i = Map.PieceType()[Square]
+        Color = Map.ColorType()
+        Attacks = []
+        match i :
+            case 0:
+                Attacks = Moves.king(square, Color[Square], True)
+            case 1: 
+                Attacks = Moves.straight(square, Color[Square], True)
+                Attacks.extend(Moves.diagnal(square, Color[Square], True))
+            case 2:
+                Attacks = Moves.straight(square, Color[Square], True)
+            case 3:
+                Attacks = Moves.knight(square, Color[Square], True)
+            case 4:
+                Attacks = Moves.pawn(square, Color[Square], True)
 
-    def defend() :
+        return Attacks
 
-        return
+    @staticmethod
+    def reach(Square: square) :
+        i = Map.PieceType()[Square]
+        Color = Map.ColorType()
+        Reaches = []
+        match i :
+            case 0:
+                Reaches = Moves.king(square, Color[Square])
+            case 1: 
+                Reaches = Moves.straight(square, Color[Square])
+                Reaches.extend(Moves.diagnal(square, Color[Square]))
+            case 2:
+                Reaches = Moves.straight(square, Color[Square])
+            case 3:
+                Reaches = Moves.knight(square, Color[Square])
+            case 4:
+                Reaches = Moves.pawn(square, Color[Square])
 
-    def passentable() :
+        return Reaches
 
         return
     
     @staticmethod
     def ColorType() : 
         colorMap = list(EMPTY)
-        for i, Square in enumerate(BOARD) :
+        for i, Square in enumerate(Board.B_BOARD) :
             if Square <= 5 :
                 colorMap[i] = 0
             elif Square <= 11 :
@@ -183,7 +210,7 @@ class Map :
     @staticmethod
     def PieceType() :
         typeMap = list(EMPTY)
-        for i, Square in enumerate(BOARD) :
+        for i, Square in enumerate(Board.B_BOARD) :
             if Square == 12 :
                 typeMap[i] = 7
             elif Square == 13 :
@@ -307,16 +334,10 @@ class Moves :
 
 class Game :
 
-
-
-    def initial():
-        DuckClock = bool
-        HalfClock = int
-        FullClock = int
-
     def Push() :
         return
 
+    
 
 
     
