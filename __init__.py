@@ -1,5 +1,7 @@
 ﻿import stat
+from typing import Self
 
+"""https://medium.com/analytics-vidhya/how-to-create-a-python-library-7d5aea80cc3f"""
 
 square = int
 
@@ -35,11 +37,9 @@ SQUARES = [
 
 COLORS = [white, black ,yellow, none] = range(4)
 
-PIECETYPES = [k, q, r, n, b, p, d] = range (8)
+PIECETYPES = [t_k, t_q, t_r, t_n, t_b, t_p, t_d, t_space] = range (8)
 
 PIECES = [K, Q, R, N, B, P, k, q, r, n, b, p, d, space] = range(14)
-
-PASSANT = int
 
 
 DISPLAY = [
@@ -66,15 +66,16 @@ EMPTY = [
 
 
 class Board :
+    
     B_BOARD = [
-    B_A1, B_B1, B_C1, B_D1, B_E1, B_F1, B_G1, B_H1,
-    B_A2, B_B2, B_C2, B_D2, B_E2, B_F2, B_G2, B_H2,
-    B_A3, B_B3, B_C3, B_D3, B_E3, B_F3, B_G3, B_H3,
-    B_A4, B_B4, B_C4, B_D4, B_E4, B_F4, B_G4, B_H4,
-    B_A5, B_B5, B_C5, B_D5, B_E5, B_F5, B_G5, B_H5,
-    B_A6, B_B6, B_C6, B_D6, B_E6, B_F6, B_G6, B_H6,
-    B_A7, B_B7, B_C7, B_D7, B_E7, B_F7, B_G7, B_H7,
-    B_A8, B_B8, B_C8, B_D8, B_E8, B_F8, B_G8, B_H8,
+            B_A1, B_B1, B_C1, B_D1, B_E1, B_F1, B_G1, B_H1,
+            B_A2, B_B2, B_C2, B_D2, B_E2, B_F2, B_G2, B_H2,
+            B_A3, B_B3, B_C3, B_D3, B_E3, B_F3, B_G3, B_H3,
+            B_A4, B_B4, B_C4, B_D4, B_E4, B_F4, B_G4, B_H4,
+            B_A5, B_B5, B_C5, B_D5, B_E5, B_F5, B_G5, B_H5,
+            B_A6, B_B6, B_C6, B_D6, B_E6, B_F6, B_G6, B_H6,
+            B_A7, B_B7, B_C7, B_D7, B_E7, B_F7, B_G7, B_H7,
+            B_A8, B_B8, B_C8, B_D8, B_E8, B_F8, B_G8, B_H8,
     ] = list(EMPTY)
 
     B_Passent = int
@@ -84,6 +85,8 @@ class Board :
     B_HalfClock = int
 
     B_FullClock = int
+
+    B_Side = bool
 
 class Decode :
 
@@ -150,7 +153,7 @@ class Decode :
         return
 
 class Map :
-
+    
     @staticmethod
     def attack(Square: square) :
         i = Map.PieceType()[Square]
@@ -190,8 +193,6 @@ class Map :
                 Reaches = Moves.pawn(square, Color[Square])
 
         return Reaches
-
-        return
     
     @staticmethod
     def ColorType() : 
@@ -212,9 +213,9 @@ class Map :
         typeMap = list(EMPTY)
         for i, Square in enumerate(Board.B_BOARD) :
             if Square == 12 :
-                typeMap[i] = 7
+                typeMap[i] = 6
             elif Square == 13 :
-                typeMap[i] = None
+                typeMap[i] = 7
             else :
                 typeMap[i] = Square % 8
         return typeMap
@@ -332,12 +333,70 @@ class Moves :
         else :
             return moves
 
-class Game :
-
-    def Push() :
+    def castle(Side: bool, Color: color, Piece: bool):
+        move = None
+        if bool(Color) :
+            if Side :
+                if Board.B_Castle[0] == False :
+                    return move
+                for i in range (61,63) :
+                    if Map.PieceType()[i] != 7 :
+                        return move
+                if Piece :
+                    move = 62
+                else :
+                    move = 61
+            else :
+                if Board.B_Castle[1] == False :
+                    return move
+                for i in range (57,60) :
+                    if Map.PieceType()[i] != 7 :
+                        return move
+                if Piece :
+                    move = 58
+                else :
+                    move = 59
+        else :
+            if Side :
+                if Board.B_Castle[2] == False :
+                    return move
+                for i in range (5,7) :
+                    if Map.PieceType()[i] != 7 :
+                        return move
+                if Piece :
+                    move = 6
+                else :
+                    move = 5
+            else :
+                if Board.B_Castle[3] == False :
+                    return move
+                for i in range (1,4) :
+                    if Map.PieceType()[i] != 7 :
+                        return move
+                if Piece :
+                    move = 2
+                else :
+                    move = 3
+        return move
+    
+    def legal() :
         return
 
-    
+class Game :
 
+    def clear() :
+        Board = list(EMPTY)
+
+    def fen_import(fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") :
+        Board.B_BOARD = Decode.FEN_to_BOARD(fen)
+
+    def start() :
+        return
+
+    def push() :
+        return
+
+    def move() :
+        return
 
     
