@@ -391,7 +391,12 @@ class Game :
         Board.B_BOARD = Decode.FEN_to_BOARD(fen)
 
     def start() :
-        return
+        Input = input('.')
+        if Input :
+            try :
+                result = eval(Input)
+                return result
+            except Exception :
 
     def push() :
         return
