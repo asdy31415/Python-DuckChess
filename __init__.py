@@ -397,8 +397,11 @@ class Game :
                 result = eval(Input)
                 return result
             except Exception :
+                return Input
+        return
 
     def push() :
+
         return
 
     def move() :
