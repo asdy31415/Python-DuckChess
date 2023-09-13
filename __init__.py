@@ -1,4 +1,5 @@
 ﻿import stat
+import re
 from typing import Self
 
 """https://medium.com/analytics-vidhya/how-to-create-a-python-library-7d5aea80cc3f"""
@@ -392,17 +393,27 @@ class Game :
 
     def start() :
         Input = input('.')
-        if Input :
-            try :
-                result = eval(Input)
-                return result
-            except Exception :
-                return Input
+        
         return
 
-    def push() :
+    def push(pgn_move) :
 
-        return
+        move = pgn_move.split("@")
+        
+        pattern = r'([NBRQK]?)([a-h]?[1-8]?)'
+        match = re.match(pattern, move[0])
+
+        if match :
+            piece_type, destination = match.groups()
+
+            if not piece_type :
+                piece_type = 'P'
+    
+            color = 0 if piece_type. isupper() else 1
+
+        destination = Decode.SquareN(destination)
+
+        return piece_type, color, destination, move[1]
 
     def move() :
         return
