@@ -380,7 +380,8 @@ class Moves :
                     move = 3
         return move
     
-    def legal() :
+    def legal(Piece: piece, End: square) :
+        if 
         return
 
 class Game :
@@ -400,20 +401,21 @@ class Game :
 
         move = pgn_move.split("@")
         
-        pattern = r'([NBRQK]?)([a-h]?[1-8]?)'
+        pattern = r"([NBRQKnbrqk]?)([1-8]?)(x?)([a-h]?[1-8]?)"
         match = re.match(pattern, move[0])
 
         if match :
-            piece_type, destination = match.groups()
+            Piece, File, attack, destination = match.groups()
 
-            if not piece_type :
-                piece_type = 'P'
-    
-            color = 0 if piece_type. isupper() else 1
+            if not Piece :
+                Piece = "P"
+            Piece = PIECES[Piece]
+
+        Color = Board.B_Side
 
         destination = Decode.SquareN(destination)
 
-        return piece_type, color, destination, move[1]
+        return Piece, Color, attack, destination, move[1]
 
     def move() :
         return
