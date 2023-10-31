@@ -65,6 +65,17 @@ EMPTY = [
     13,13,13,13,13,13,13,13,
     ]
 
+aaaa = [
+    13,13,13,13,13,13,13,13,
+    13,13,13,13,13,13,13,13,
+    13,13,13,13,13,13,13,13,
+    13,13,13,6,13,13,13,13,
+    13,13,13,13,13,13,13,13,
+    13,13,13,0,13,13,13,13,
+    13,13,13,13,13,13,13,13,
+    13,13,13,13,13,13,13,13,
+    ]
+
 
 class Board :
     
@@ -77,7 +88,7 @@ class Board :
             B_A6, B_B6, B_C6, B_D6, B_E6, B_F6, B_G6, B_H6,
             B_A7, B_B7, B_C7, B_D7, B_E7, B_F7, B_G7, B_H7,
             B_A8, B_B8, B_C8, B_D8, B_E8, B_F8, B_G8, B_H8,
-    ] = list(EMPTY)
+    ] = list(aaaa)
 
     B_Passent = int
 
@@ -88,6 +99,8 @@ class Board :
     B_FullClock = int
 
     B_Side = bool
+
+
 
 class Decode :
 
@@ -146,19 +159,28 @@ class Decode :
                     return Decode.SquareN(fen_parts[3])
             case _ :
                 return fen_parts[part]
-
-
-
+            
     @staticmethod
     def BOARD_to_FEN() :
         return
 
+
+
 class Map :
+
+    def __init__(self, Board, Color: color) :
+
+        self.Board = Board
+        self.Color = Color
+
+        self.ColorMap = self.ColorType()
+        self.PieceMap = self.PieceType()
+        self.AttackedMap = self.Attacked()
+        #self.DeffededMap = self.Deffended()
     
-    @staticmethod
-    def ColorType() : 
+    def ColorType(self) : 
         colorMap = list(EMPTY)
-        for i, Square in enumerate(Board.B_BOARD) :
+        for i, Square in enumerate(self.Board) :
             if Square <= 5 :
                 colorMap[i] = 0
             elif Square <= 11 :
@@ -169,10 +191,9 @@ class Map :
                 colorMap[i] = 3
         return colorMap
 
-    @staticmethod
-    def PieceType() :
+    def PieceType(self) :
         typeMap = list(EMPTY)
-        for i, Square in enumerate(Board.B_BOARD) :
+        for i, Square in enumerate(self.Board) :
             if Square == 12 :
                 typeMap[i] = 6
             elif Square == 13 :
@@ -180,19 +201,64 @@ class Map :
             else :
                 typeMap[i] = Square % 8
         return typeMap
+    
+    @staticmethod
+    def Attacked(self) :
+        if self.Side != None :
+            attacked = []
+            for i in range(64) :
+                if bool(self.ColorMap[i]) == self.Side and self.ColorMap[i] <= 1 :
+                    current_moves = Moves(i, None, None, None)
+                    match self.PieceMap[i] :                   
+                        case 0 :
+                            attacked += current_moves.king()
+                        case 1 :    
+                            attacked += current_moves.straight()
+                            attacked += current_moves.diagnal()
+                        case 2 :
+                            attacked += current_moves.straight()
+                        case 3 :
+                            attacked += current_moves.knight()
+                        case 4 :
+                            attacked += current_moves.diagnal()
+                        case 5 :
+                            attacked += current_moves.pawn()
 
+                    current_moves = Moves(i, None, True, None)
+                    match self.PieceMap[i] :                   
+                        case 0 :
+                            attacked += current_moves.king()
+                        case 1 :    
+                            attacked += current_moves.straight()
+                            attacked += current_moves.diagnal()
+                        case 2 :
+                            attacked += current_moves.straight()
+                        case 3 :
+                            attacked += current_moves.knight()
+                        case 4 :
+                            attacked += current_moves.diagnal()
+                        case 5 :
+                            attacked += current_moves.pawn()
+            attacked = list(set(attacked))
+            return attacked
+        else :
+            return
+                
+                               
 
 class Moves :
     
-    def __init__(Start: square, End: square, attack = None, Side = None) :
+    def __init__(self, Start: square, End: square, attack = None, Side = None) :
         
         self.Start = Start
         self.End = End
         self.attack = attack
         self.Side = Side 
+
+        self.Map = Map(Board.B_BOARD, )
         
-        self.Color = Map.ColorType()[self.Start]
-        self.Piece = map.PieceType()[self.Start]
+        self.Piece = self.Map.PieceMap()[self.Start]
+        self.Color = self.Map.ColorMap()[self.Start]
         
     def diagnal(self) :
         moves = []
@@ -264,7 +330,7 @@ class Moves :
         else :
                foward = 8
 
-        if attack :
+        if self.attack :
             for offset in atteckoffsets :
                 offsets.append(foward + offset)
         else :
@@ -354,13 +420,30 @@ class Moves :
                     move = 3
         return move
     
-    def legal(Piece: piece, End: square, attack = False) :
-        for Square, i in enumerate(Baord.B_Board) : 
-        	if i == Piece :
-            	if End in Map.attack(Square) or End in Map.reach(Square) :
-                    return True
-                else
-                    return False
+    def move(self) :
+
+        AttackMap = Map(Board.B_BOARD, self.Color)
+
+        if self.Side :
+            moves = []
+            for Square, i in enumerate(self.Map.PieceMap) :
+                if i == self.Piece and self.Map.ColorMap[Square] == self.Color :
+                    match self.Piece :                   
+                        case 0 :
+                            moves += self.king()
+                            moves = [i for i in moves if i not in AttackMap.Attacked()]            
+                        case 1 :    
+                            moves += self.straight()
+                            moves += self.diagnal()
+                        case 2 :
+                            moves += self.straight()
+                        case 3 :
+                            moves += self.knight()
+                        case 4 :
+                            moves += self.diagnal()
+                        case 5 :
+                            moves += self.pawn()
+            return moves                                
 
 class Game :
 
@@ -394,11 +477,5 @@ class Game :
         destination = Decode.SquareN(destination)
 
         return Piece, Color, attack, destination, move[1]
-
-    def push() :
-        if leagal == True :
-            
-    	
-        return
 
     
