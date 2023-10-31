@@ -156,46 +156,6 @@ class Decode :
 class Map :
     
     @staticmethod
-    def attack(Square: square) :
-        i = Map.PieceType()[Square]
-        Color = Map.ColorType()
-        Attacks = []
-        match i :
-            case 0:
-                Attacks = Moves.king(square, Color[Square], True)
-            case 1: 
-                Attacks = Moves.straight(square, Color[Square], True)
-                Attacks.extend(Moves.diagnal(square, Color[Square], True))
-            case 2:
-                Attacks = Moves.straight(square, Color[Square], True)
-            case 3:
-                Attacks = Moves.knight(square, Color[Square], True)
-            case 4:
-                Attacks = Moves.pawn(square, Color[Square], True)
-
-        return Attacks
-
-    @staticmethod
-    def reach(Square: square) :
-        i = Map.PieceType()[Square]
-        Color = Map.ColorType()
-        Reaches = []
-        match i :
-            case 0:
-                Reaches = Moves.king(square, Color[Square])
-            case 1: 
-                Reaches = Moves.straight(square, Color[Square])
-                Reaches.extend(Moves.diagnal(square, Color[Square]))
-            case 2:
-                Reaches = Moves.straight(square, Color[Square])
-            case 3:
-                Reaches = Moves.knight(square, Color[Square])
-            case 4:
-                Reaches = Moves.pawn(square, Color[Square])
-
-        return Reaches
-    
-    @staticmethod
     def ColorType() : 
         colorMap = list(EMPTY)
         for i, Square in enumerate(Board.B_BOARD) :
@@ -223,73 +183,83 @@ class Map :
 
 
 class Moves :
-
-    def diagnal(Square: square, Color: color, attack = None) :
+    
+    def __init__(Start: square, End: square, attack = None, Side = None) :
+        
+        self.Start = Start
+        self.End = End
+        self.attack = attack
+        self.Side = Side 
+        
+        self.Color = Map.ColorType()[self.Start]
+        self.Piece = map.PieceType()[self.Start]
+        
+    def diagnal(self) :
         moves = []
         attacks = [] 
         offsets = [7, -7, 9, -9]
 
         for offset in offsets :
-            move = Square + offset
-            while move in range(64) and abs(move % 8 - Square % 8) == abs(move // 8 - Square // 8):
+            move = self.Start + offset
+            while move in range(64) and abs(move % 8 - self.Start % 8) == abs(move // 8 - self.Start // 8):
                 if Map.ColorType()[move] == 3 :
                     moves.append(move)
                     move += offset
-                elif Map.ColorType()[move] == int(not bool(Color)) :
+                elif Map.ColorType()[move] == int(not bool(self.Color)) :
                     attacks.append(move)
                     break
 
-        if attack :
+        if self.attack :
             return attacks
         else :
             return moves
 
-    def straight(Square: square, Color: color, attack = None) :
+    def straight(self) :
         moves = []
         attacks = [] 
         offsets = [1,-1,8,-8]
 
         for offset in offsets :
-            move = Square + offset
-            while move in range(64) and (Square // 8 == move // 8 or Square % 8 == move % 8):
+            move = self.Start + offset
+            while move in range(64) and (self.Start // 8 == move // 8 or self.Start % 8 == move % 8):
                 if Map.ColorType()[move] == 3 :
                     moves.append(move)
                     move += offset
-                elif Map.ColorType()[move] == int(not bool(Color)) :
+                elif Map.ColorType()[move] == int(not bool(self.Color)) :
                     attacks.append(move)
                     break
 
-        if attack :
+        if self.attack :
             return attacks
         else :
             return moves
 
-    def knight(Square: square, Color: color, attack = None) :
+    def knight(self) :
         moves = []
         attacks = [] 
         offsets = [6, 10, 15, 17, -6, -10, -15, -17]
 
         for offset in offsets :
-            move = Square + offset
-            if move in range(64) and abs(move % 8 - Square % 8) <= 2 and abs(move // 8 - Square // 8) <= 2 :
+            move = self.Start + offset
+            if move in range(64) and abs(move % 8 - self.Start % 8) <= 2 and abs(move // 8 - self.Start // 8) <= 2 :
                 if Map.ColorType()[move] == 3 :
                     moves.append(move)
-                elif Map.ColorType()[move] == int(not bool(Color)) :
+                elif Map.ColorType()[move] == int(not bool(self.Color)) :
                     attacks.append(move)
 
-        if attack :
+        if self.attack :
             return attacks
         else :
             return moves
     
-    def pawn(Square: square, Color: color, attack = None) :
+    def pawn(self) :
         moves = []
         attacks = []
         offsets = []
         atteckoffsets = [1, -1]
         foward = 0
 
-        if bool(Color) :
+        if bool(self.Color) :
                foward = -8
         else :
                foward = 8
@@ -298,83 +268,87 @@ class Moves :
             for offset in atteckoffsets :
                 offsets.append(foward + offset)
         else :
-            if Square < 15 or Square > 48 :
+            if self.Start < 15 or self.Start > 48 :
                offsets.append(foward * 2)
             offsets.append(foward)
 
             
         for offset in offsets :
-            move = Square + offset
-            if move in range(64) and abs(Square % 8 - move % 8) <= 1 :
+            move = self.Start + offset
+            if move in range(64) and abs(self.Start % 8 - move % 8) <= 1 :
                 if Map.ColorType()[move] == 3 :
                     moves.append(move)
-                elif Map.ColorType()[move] == int(not bool(Color)) :
+                elif Map.ColorType()[move] == int(not bool(self.Color)) :
                     attacks.append(move)
         
-        if attack :
+        if self.attack :
             return attacks
         else :
             return moves
 
-    def king(Square: square, Color: color, attack = None) :
+    def king(self) :
         moves = []
         attacks = []
         offsets = [-9, -8, -7, -1 , 1, 7, 8, 9]
         
         for offset in offsets :
-            move = Square + offset
-            if move in range(64) and (abs(move // 8 - Square // 8) <= 1 or abs(move % 8 - Square % 8) <= 1) :
+            move = self.Start + offset
+            if move in range(64) and (abs(move // 8 - self.Start // 8) <= 1 or abs(move % 8 - self.Start % 8) <= 1) :
                 if Map.ColorType()[move] == 3 :
                     moves.append(move)
-                elif Map.ColorType()[move] == int(not bool(Color)) or Map.passentable :
+                elif Map.ColorType()[move] == int(not bool(self.Color)) or Map.passentable :
                     attacks.append(move)
 
-        if attack :
+        if self.attack :
             return attacks
         else :
             return moves
 
-    def castle(Side: bool, Color: color, Piece: bool):
+    def castle(self):
         move = None
-        if bool(Color) :
-            if Side :
+        if bool(self.Color) :
+            #black king side castle
+            if self.Side :
                 if Board.B_Castle[0] == False :
                     return move
                 for i in range (61,63) :
                     if Map.PieceType()[i] != 7 :
                         return move
-                if Piece :
+                if self.Piece :
                     move = 62
                 else :
                     move = 61
+            #black queen side castle
             else :
                 if Board.B_Castle[1] == False :
                     return move
                 for i in range (57,60) :
                     if Map.PieceType()[i] != 7 :
                         return move
-                if Piece :
+                if self.Piece :
                     move = 58
                 else :
                     move = 59
         else :
-            if Side :
+            #white king side castle
+            if self.Side :
                 if Board.B_Castle[2] == False :
                     return move
                 for i in range (5,7) :
                     if Map.PieceType()[i] != 7 :
                         return move
-                if Piece :
+                if self.Piece :
                     move = 6
                 else :
                     move = 5
+            #white queen side castle        
             else :
                 if Board.B_Castle[3] == False :
                     return move
                 for i in range (1,4) :
                     if Map.PieceType()[i] != 7 :
                         return move
-                if Piece :
+                if self.Piece :
                     move = 2
                 else :
                     move = 3
@@ -401,7 +375,7 @@ class Game :
         
         return
 
-    def push(pgn_move) :
+    def move(pgn_move) :
 
         move = pgn_move.split("@")
         
@@ -421,7 +395,10 @@ class Game :
 
         return Piece, Color, attack, destination, move[1]
 
-    def move() :
+    def push() :
+        if leagal == True :
+            
+    	
         return
 
     
