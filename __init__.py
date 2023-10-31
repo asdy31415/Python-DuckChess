@@ -1,4 +1,4 @@
-﻿import stat
+import stat
 import re
 from typing import Self
 
@@ -380,9 +380,13 @@ class Moves :
                     move = 3
         return move
     
-    def legal(Piece: piece, End: square) :
-        if 
-        return
+    def legal(Piece: piece, End: square, attack = False) :
+        for Square, i in enumerate(Baord.B_Board) : 
+        	if i == Piece :
+            	if End in Map.attack(Square) or End in Map.reach(Square) :
+                    return True
+                else
+                    return False
 
 class Game :
 
