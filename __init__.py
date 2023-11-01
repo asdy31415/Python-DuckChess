@@ -499,7 +499,7 @@ class Game :
         
         return
 
-    def move(pgn_move) :
+    def pgn_to_move(pgn_move) :
 
         move = pgn_move.split("@")
         
