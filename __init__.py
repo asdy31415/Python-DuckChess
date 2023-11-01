@@ -88,7 +88,7 @@ class Board :
             B_A6, B_B6, B_C6, B_D6, B_E6, B_F6, B_G6, B_H6,
             B_A7, B_B7, B_C7, B_D7, B_E7, B_F7, B_G7, B_H7,
             B_A8, B_B8, B_C8, B_D8, B_E8, B_F8, B_G8, B_H8,
-    ]
+    ] = list(EMPTY)
     
     B_Side = bool
 
@@ -116,7 +116,7 @@ class Decode :
     
     #convert The number of a square to its name        
     @staticmethod
-    def SquareName(Square: square)
+    def SquareName(Square: square) :
         return RANKS_NAME[Decode.Rank(Square)] + FILES_NAME[Decode.File(Square)]
 
     #return the square's file
@@ -175,26 +175,30 @@ class Decode :
         space_count = None
         
         for i in range(64):
-            if (i + 1) % 8 == 0
+            if (i + 1) % 8 == 0 :
                 fen.append("/")
             if Board.B_Board[i] == 13 :
-        		space_count += 1
+                space_count += 1
             else :
                 if space_count :
                     fen.append(space_count)
                     space_count = None    
-    			fen.appaend(PIECE_NAME[Piece])
+            fen.appaend(PIECES_NAME[i])
         fen.reverse()
         
-        fen.append(" " + "b" if B_Side else "w")
+        fen.append(" " + "b" if Board.B_Side else "w")
         
-        fen.append(" " + "K" if B_Castle[0] + "Q" if B_Castle[1] + "k" if B_Castle[2] + "q" if B_Castle[3])
+        fen.append(" ")
+        fen.append("K" if Board.B_Castle[0] else "")
+        fen.append("Q" if Board.B_Castle[1] else"")
+        fen.append("k" if Board.B_Castle[2] else"")
+        fen.append("q" if Board.B_Castle[3] else"")
         
         fen.append(" " + "-" if not Board.B_Passent else Decode.SquareName(Board.B_Passent))
         
-        fen.append(" " + B_HalfClock)
+        fen.append(" " + Board.B_HalfClock)
         
-        fen.append(" " + B_FullClock)
+        fen.append(" " + Board.B_FullClock)
         
         return fen
 
@@ -479,7 +483,7 @@ class Moves :
             return moves                                
 
     def leagal(self) :
-		return self.End in self.move() 
+        return self.End in self.move() 
         	        
         	
 class Game :
