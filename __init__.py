@@ -79,7 +79,7 @@ aaaa = [
 
 class Board :
     
-    B_BOARD = [
+    B_Board = [
             B_A1, B_B1, B_C1, B_D1, B_E1, B_F1, B_G1, B_H1,
             B_A2, B_B2, B_C2, B_D2, B_E2, B_F2, B_G2, B_H2,
             B_A3, B_B3, B_C3, B_D3, B_E3, B_F3, B_G3, B_H3,
@@ -88,17 +88,19 @@ class Board :
             B_A6, B_B6, B_C6, B_D6, B_E6, B_F6, B_G6, B_H6,
             B_A7, B_B7, B_C7, B_D7, B_E7, B_F7, B_G7, B_H7,
             B_A8, B_B8, B_C8, B_D8, B_E8, B_F8, B_G8, B_H8,
-    ] = list(aaaa)
-
-    B_Passent = int
+    ]
+    
+    B_Side = bool
 
     B_Castle = [bool, bool, bool, bool]
+    
+    B_Passent = int
 
     B_HalfClock = int
 
     B_FullClock = int
 
-    B_Side = bool
+    
 
 
 
@@ -111,15 +113,21 @@ class Decode :
             if rank == Square[0].lower() :
                 return (int(Square[1]) - 1) * 8 + i
         return None
+    
+    #convert The number of a square to its name        
+    @staticmethod
+    def SquareName(Square: square)
+        return RANKS_NAME[Decode.Rank(Square)] + FILES_NAME[Decode.File(Square)]
 
-    #return the square's rank
+    #return the square's file
+    @staticmethod
     def File(Square: square) :
-        Square = Square % 8
-        return Square
-
+        return Square % 8
+	
+    #return the square's rank
+    @staticmethod
     def Rank(Square: square) :
-        Square = Square // 8
-        return Square
+        return Square // 8
     
     @staticmethod
     def OnEdge(Square: square) :
@@ -162,7 +170,33 @@ class Decode :
             
     @staticmethod
     def BOARD_to_FEN() :
-        return
+        
+        fen = []
+        space_count = None
+        
+        for i in range(64):
+            if (i + 1) % 8 == 0
+                fen.append("/")
+            if Board.B_Board[i] == 13 :
+        		space_count += 1
+            else :
+                if space_count :
+                    fen.append(space_count)
+                    space_count = None    
+    			fen.appaend(PIECE_NAME[Piece])
+        fen.reverse()
+        
+        fen.append(" " + "b" if B_Side else "w")
+        
+        fen.append(" " + "K" if B_Castle[0] + "Q" if B_Castle[1] + "k" if B_Castle[2] + "q" if B_Castle[3])
+        
+        fen.append(" " + "-" if not Board.B_Passent else Decode.SquareName(Board.B_Passent))
+        
+        fen.append(" " + B_HalfClock)
+        
+        fen.append(" " + B_FullClock)
+        
+        return fen
 
 
 
@@ -202,7 +236,6 @@ class Map :
                 typeMap[i] = Square % 8
         return typeMap
     
-    @staticmethod
     def Attacked(self) :
         if self.Side != None :
             attacked = []
@@ -255,7 +288,7 @@ class Moves :
         self.attack = attack
         self.Side = Side 
 
-        self.Map = Map(Board.B_BOARD, )
+        self.Map = Map(Board.B_oard, None)
         
         self.Piece = self.Map.PieceMap()[self.Start]
         self.Color = self.Map.ColorMap()[self.Start]
@@ -268,7 +301,7 @@ class Moves :
         for offset in offsets :
             move = self.Start + offset
             while move in range(64) and abs(move % 8 - self.Start % 8) == abs(move // 8 - self.Start // 8):
-                if Map.ColorType()[move] == 3 :
+                if self.Color[move] == 3 :
                     moves.append(move)
                     move += offset
                 elif Map.ColorType()[move] == int(not bool(self.Color)) :
@@ -288,7 +321,7 @@ class Moves :
         for offset in offsets :
             move = self.Start + offset
             while move in range(64) and (self.Start // 8 == move // 8 or self.Start % 8 == move % 8):
-                if Map.ColorType()[move] == 3 :
+                if self.ColorMap()[move] == 3 :
                     moves.append(move)
                     move += offset
                 elif Map.ColorType()[move] == int(not bool(self.Color)) :
@@ -422,7 +455,7 @@ class Moves :
     
     def move(self) :
 
-        AttackMap = Map(Board.B_BOARD, self.Color)
+        AttackMap = Map(Board.B_Board, self.Color)
 
         if self.Side :
             moves = []
@@ -445,13 +478,17 @@ class Moves :
                             moves += self.pawn()
             return moves                                
 
+    def leagal(self) :
+		return self.End in self.move() 
+        	        
+        	
 class Game :
 
     def clear() :
         Board = list(EMPTY)
 
     def fen_import(fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") :
-        Board.B_BOARD = Decode.FEN_to_BOARD(fen)
+        Board.B_Board = Decode.FEN_to_BOARD(fen)
 
     def start() :
         Input = input('.')
