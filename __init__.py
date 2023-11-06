@@ -65,40 +65,29 @@ EMPTY = [
     13,13,13,13,13,13,13,13,
     ]
 
-aaaa = [
-    13,13,13,13,13,13,13,13,
-    13,13,13,13,13,13,13,13,
-    13,13,13,13,13,13,13,13,
-    13,13,13,6,13,13,13,13,
-    13,13,13,13,13,13,13,13,
-    13,13,13,0,13,13,13,13,
-    13,13,13,13,13,13,13,13,
-    13,13,13,13,13,13,13,13,
-    ]
-
-
 class Board :
-    
-    B_Board = [
-            B_A1, B_B1, B_C1, B_D1, B_E1, B_F1, B_G1, B_H1,
-            B_A2, B_B2, B_C2, B_D2, B_E2, B_F2, B_G2, B_H2,
-            B_A3, B_B3, B_C3, B_D3, B_E3, B_F3, B_G3, B_H3,
-            B_A4, B_B4, B_C4, B_D4, B_E4, B_F4, B_G4, B_H4,
-            B_A5, B_B5, B_C5, B_D5, B_E5, B_F5, B_G5, B_H5,
-            B_A6, B_B6, B_C6, B_D6, B_E6, B_F6, B_G6, B_H6,
-            B_A7, B_B7, B_C7, B_D7, B_E7, B_F7, B_G7, B_H7,
-            B_A8, B_B8, B_C8, B_D8, B_E8, B_F8, B_G8, B_H8,
-    ] = list(EMPTY)
-    
-    B_Side = bool
 
-    B_Castle = [bool, bool, bool, bool]
+    def __init__(self, B_Board, B_Side, B_Castle, B_Passent, B_HalfClock, B_FullClock) :
     
-    B_Passent = int
+        self.B_Board = [
+                B_A1, B_B1, B_C1, B_D1, B_E1, B_F1, B_G1, B_H1,
+                B_A2, B_B2, B_C2, B_D2, B_E2, B_F2, B_G2, B_H2,
+                B_A3, B_B3, B_C3, B_D3, B_E3, B_F3, B_G3, B_H3,
+                B_A4, B_B4, B_C4, B_D4, B_E4, B_F4, B_G4, B_H4,
+                B_A5, B_B5, B_C5, B_D5, B_E5, B_F5, B_G5, B_H5,
+                B_A6, B_B6, B_C6, B_D6, B_E6, B_F6, B_G6, B_H6,
+                B_A7, B_B7, B_C7, B_D7, B_E7, B_F7, B_G7, B_H7,
+                B_A8, B_B8, B_C8, B_D8, B_E8, B_F8, B_G8, B_H8,
+        ] = B_Board
+        self.B_Side = B_Side = bool
 
-    B_HalfClock = int
+        self.B_Castle = B_Castle = [bool, bool, bool, bool]
+    
+        self.B_Passent = B_Passent = int
 
-    B_FullClock = int
+        self.B_HalfClock = int
+
+        self.B_FullClock = B_FullClock = int
 
     
 
@@ -156,8 +145,8 @@ class Decode :
                 fen_castle = fen_parts[2]
                 all_castle = ["K", "Q", "k", "q"]
                 castle = [False, False, False, False]
-                for i, char in enumerate(castle) :
-                    if char == fen_castle[i] :
+                for i, char in enumerate(fen_castle) :
+                    if char == all_castle[i] :
                         castle[i] = True
                 return castle
             case 3 :
@@ -169,7 +158,8 @@ class Decode :
                 return fen_parts[part]
             
     @staticmethod
-    def BOARD_to_FEN() :
+    def BOARD_to_FEN(Board) :
+
         
         fen = []
         space_count = None
@@ -177,7 +167,7 @@ class Decode :
         for i in range(64):
             if (i + 1) % 8 == 0 :
                 fen.append("/")
-            if Board.B_Board[i] == 13 :
+            if Board.Board[i] == 13 :
                 space_count += 1
             else :
                 if space_count :
@@ -201,6 +191,41 @@ class Decode :
         fen.append(" " + Board.B_FullClock)
         
         return fen
+    
+    #return PieceType, PieceColor, Taking a piece or not, where it's going, and duck destination 
+    @staticmethod
+    def PGN_to_Move(pgn_move) :
+
+        if pgn_move[0] == "O" :
+            if pgn_move.count("O") == 2 :
+                return 0
+            else :
+                return 1
+            
+        elif pgn_move[0] == "o" :    
+            if pgn_move.count("o") == 2 :
+                return 2
+            else :
+                return 3
+            
+        else :
+            move = pgn_move.split("@")
+        
+            pattern = r"([NBRQKnbrqk]?)([1-8]?)(x?)([a-h]?[1-8]?)"
+            match = re.match(pattern, move[0])
+
+            if match :
+                Piece, File, attack, destination = match.groups()
+
+                if not Piece :
+                    Piece = "P"
+                Piece = PIECES[Piece]
+
+            Color = Board.B_Side
+
+            destination = Decode.SquareN(destination)
+
+            return [Piece, Color, attack, destination, move[1]]
 
 
 
@@ -240,12 +265,12 @@ class Map :
                 typeMap[i] = Square % 8
         return typeMap
     
-    def Attacked(self) :
-        if self.Side != None :
+    def Attacked(self, Side) :
+        if Side != None :
             attacked = []
             for i in range(64) :
-                if bool(self.ColorMap[i]) == self.Side and self.ColorMap[i] <= 1 :
-                    current_moves = Moves(i, None, None, None)
+                if bool(self.ColorMap[i]) == Side and self.ColorMap[i] <= 1 :
+                    current_moves = Moves(i, None, None, None, None)
                     match self.PieceMap[i] :                   
                         case 0 :
                             attacked += current_moves.king()
@@ -285,14 +310,15 @@ class Map :
 
 class Moves :
     
-    def __init__(self, Start: square, End: square, attack = None, Side = None) :
+    def __init__(self, Start: square, End: square, attack = None, Side = None, Board = None) :
         
         self.Start = Start
         self.End = End
         self.attack = attack
-        self.Side = Side 
+        self.Side = Side
+        self.Board = Board 
 
-        self.Map = Map(Board.B_oard, None)
+        self.Map = Map(self.Board, None)
         
         self.Piece = self.Map.PieceMap()[self.Start]
         self.Color = self.Map.ColorMap()[self.Start]
@@ -418,9 +444,8 @@ class Moves :
                     if Map.PieceType()[i] != 7 :
                         return move
                 if self.Piece :
-                    move = 62
-                else :
-                    move = 61
+                    move = [62, 61]
+
             #black queen side castle
             else :
                 if Board.B_Castle[1] == False :
@@ -428,10 +453,7 @@ class Moves :
                 for i in range (57,60) :
                     if Map.PieceType()[i] != 7 :
                         return move
-                if self.Piece :
-                    move = 58
-                else :
-                    move = 59
+                    move = [58, 59]
         else :
             #white king side castle
             if self.Side :
@@ -441,9 +463,7 @@ class Moves :
                     if Map.PieceType()[i] != 7 :
                         return move
                 if self.Piece :
-                    move = 6
-                else :
-                    move = 5
+                    move = [6, 5]
             #white queen side castle        
             else :
                 if Board.B_Castle[3] == False :
@@ -452,23 +472,20 @@ class Moves :
                     if Map.PieceType()[i] != 7 :
                         return move
                 if self.Piece :
-                    move = 2
-                else :
-                    move = 3
+                    move = [2, 3]
         return move
     
     def move(self) :
 
-        AttackMap = Map(Board.B_Board, self.Color)
-
         if self.Side :
+            
             moves = []
+
             for Square, i in enumerate(self.Map.PieceMap) :
                 if i == self.Piece and self.Map.ColorMap[Square] == self.Color :
                     match self.Piece :                   
                         case 0 :
-                            moves += self.king()
-                            moves = [i for i in moves if i not in AttackMap.Attacked()]            
+                            moves += self.king()         
                         case 1 :    
                             moves += self.straight()
                             moves += self.diagnal()
@@ -480,43 +497,38 @@ class Moves :
                             moves += self.diagnal()
                         case 5 :
                             moves += self.pawn()
-            return moves                                
+            return moves   
 
     def leagal(self) :
-        return self.End in self.move() 
+        return self.End in self.move()
+
+    def castle_leagal(self) :
+        if self.castle == None :
+            return False
+        else :
+            return True
+    
+    def duck_leagal(self, Square: square) :
+        return self.Piece(Square) == 7
         	        
         	
 class Game :
 
+    def __init__ (self, Board) :
+        self.Board = Board
+
     def clear() :
         Board = list(EMPTY)
 
-    def fen_import(fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") :
-        Board.B_Board = Decode.FEN_to_BOARD(fen)
+    def fen_import(self, fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1") :
+        self.Board.B_Board = Decode.FEN_to_BOARD(fen)
 
-    def start() :
-        Input = input('.')
-        
+    def start(self) :
+        while True :
+            Input = input('.')
+            Decode.pgn_to_move(Input)
+
+
+    def push(self) :
         return
-
-    def pgn_to_move(pgn_move) :
-
-        move = pgn_move.split("@")
-        
-        pattern = r"([NBRQKnbrqk]?)([1-8]?)(x?)([a-h]?[1-8]?)"
-        match = re.match(pattern, move[0])
-
-        if match :
-            Piece, File, attack, destination = match.groups()
-
-            if not Piece :
-                Piece = "P"
-            Piece = PIECES[Piece]
-
-        Color = Board.B_Side
-
-        destination = Decode.SquareN(destination)
-
-        return Piece, Color, attack, destination, move[1]
-
-    
+    #add something to make return of `PGN_to_move()` when castle to somthing `Move.castle` can
