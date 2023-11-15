@@ -422,9 +422,9 @@ class Moves:
         for offset in offsets:
             move = self.Start + offset
             if move in range(64) and (abs(move // 8 - self.Start // 8) <= 1 or abs(move % 8 - self.Start % 8) <= 1):
-                if self.Color[move] == 3:
+                if self.Map.ColorMap()[move] == 3:
                     moves.append(move)
-                elif self.Color[move] == int(not bool(self.Color)):
+                elif self.Map.ColorMap()[move] == int(not bool(self.Color)):
                     attacks.append(move)
 
         if self.attack:
@@ -435,15 +435,23 @@ class Moves:
     def castle(self, castle_type):
         match castle_type:
             case 0:
-            
-        
-        return
-    
+                if all(Color == 3 for Color in self.Map.ColorMap()[5:6] and self.board.B_Castle[castle_type]):
+                    return [6, 5]
+            case 1:
+                if all(Color == 3 for Color in self.Map.ColorMap()[1:3] and self.board.B_Castle[castle_type]):    
+                    return [2, 3]
+            case 2:
+                if all(Color == 3 for Color in self.Map.ColorMap()[61:62] and self.board.B_Castle[castle_type]):
+                    return [62, 61]
+            case 3:
+                if all(Color == 3 for Color in self.Map.ColorMap()[57:59] and self.board.B_Castle[castle_type]):
+                    retrun [58, 59]
+
     def move(self):
         if self.Side:
             moves = []
             for Square, i in enumerate(self.Map.PieceMap):
-                if i == self.Piece and self.Map.ColorMap[Square] == self.Color:
+                if i == self.Piece and self.Map.ColorMap()[Square] == self.Color:
                     match self.Piece:                   
                         case 0:
                             moves += self.king()         
