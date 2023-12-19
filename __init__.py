@@ -90,9 +90,7 @@ class Board:
         self.B_FullClock = B_FullClock = int
 
     
-
-
-
+ 
 class Decode:
 
     #convert The name of a square to its coordinate
@@ -214,17 +212,22 @@ class Decode:
             match = re.match(pattern, move[0])
 
             if match:
-                Piece, File, attack, destination = match.groups()
+                Piece, Files, attack, destination = match.groups()
 
                 if not Piece:
                     Piece = "P"
                 Piece = PIECES[Piece]
 
+                if attack == "x":
+                    attack == True
+                else:
+                    attack == False    
+
             Color = Board.B_Side
 
             destination = Decode.SquareN(destination)
 
-            return [Piece, Color, attack, destination, move[1]]
+            return [destination, attack, Color, Files,  move[1]]
 
 
 
@@ -432,21 +435,6 @@ class Moves:
         else:
             return moves
 
-    def castle(self, castle_type):
-        match castle_type:
-            case 0:
-                if all(Color == 3 for Color in self.Map.ColorMap()[5:6] and self.board.B_Castle[castle_type]):
-                    return [6, 5]
-            case 1:
-                if all(Color == 3 for Color in self.Map.ColorMap()[1:3] and self.board.B_Castle[castle_type]):    
-                    return [2, 3]
-            case 2:
-                if all(Color == 3 for Color in self.Map.ColorMap()[61:62] and self.board.B_Castle[castle_type]):
-                    return [62, 61]
-            case 3:
-                if all(Color == 3 for Color in self.Map.ColorMap()[57:59] and self.board.B_Castle[castle_type]):
-                    retrun [58, 59]
-
     def move(self):
         if self.Side:
             moves = []
@@ -471,23 +459,46 @@ class Moves:
     def leagal(self):
         return self.End in self.move()
 
-    def castle_leagal(self):
+    
+    def duck_leagal(self, Square: square):
+        return self.Piece(Square) == 7
+    
+
+
+class Castle:
+    def __init__(self, castle):
+        self.castle = castle
+    
+    def castle(self, castle_type):
+        match castle_type:
+            case 0:
+                if all(Color == 3 for Color in self.Map.ColorMap()[5:6] and self.board.B_Castle[castle_type]):
+                    return [6, 5]
+            case 1:
+                if all(Color == 3 for Color in self.Map.ColorMap()[1:3] and self.board.B_Castle[castle_type]):    
+                    return [2, 3]
+            case 2:
+                if all(Color == 3 for Color in self.Map.ColorMap()[61:62] and self.board.B_Castle[castle_type]):
+                    return [62, 61]
+            case 3:
+                if all(Color == 3 for Color in self.Map.ColorMap()[57:59] and self.board.B_Castle[castle_type]):
+                    return [58, 59]
+                
+    def leagal(self):
         if self.castle() == None:
             return False
         else:
             return True
-    
-    def duck_leagal(self, Square: square):
-        return self.Piece(Square) == 7
-        	        
+
+
         	
 class Game:
 
-    def __init__ (self, Board):
+    def __init__(self, Board):
         self.Board = Board
 
-    def clear():
-        Board = list(EMPTY)
+    def clear(self):
+        self.Board = list(EMPTY)
 
     def fen_import(self, fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"):
         self.Board.B_Board = Decode.FEN_to_BOARD(fen)
@@ -495,13 +506,16 @@ class Game:
     def start(self):
         while True:
             Input = input('.')
-            move = Decode.pgn_to_move(Input)
-            if type(move) == int: 
+            move = Decode.PGN_to_Move(Input)
+            if type(move) == int:
+                current_move = Castle(move)
+                if current_move.leagal():
+                    self.push()
+            else:
+                current_move = Moves(None, move[0])
                 
-
-
     def push(self):
-
+        
 
         return
     #add something to make return of `PGN_to_move()` when castle to somthing `Move.castle` can
