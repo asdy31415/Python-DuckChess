@@ -191,7 +191,7 @@ class Decode:
     
     #return PieceType, PieceColor, Taking a piece or not, where it's going, and duck destination 
     @staticmethod
-    def PGN_to_Move(pgn_move):
+    def PGN_to_Move(pgn_move, currentBoard):
 
         if pgn_move[0] == "O":
             if pgn_move.count("O") == 2:
@@ -223,11 +223,11 @@ class Decode:
                 else:
                     attack == False    
 
-            Color = Board.B_Side
+            Color = currentBoard.B_Side
 
             destination = Decode.SquareN(destination)
 
-            return [destination, attack, Color, Files,  move[1]]
+            return [destination, attack, Color, Files, Piece, move[1]]
 
 
 
@@ -322,8 +322,9 @@ class Moves:
 
         self.Map = Map(self.board, None)
         
-        self.Piece = self.Map.PieceMap()[self.Start]
-        self.Color = self.Map.ColorMap()[self.Start]
+        if self.Start != None:
+            self.Piece = self.Map.PieceMap()[self.Start]
+            self.Color = self.Map.ColorMap()[self.Start]
         
     def diagnal(self):
         moves = []
@@ -402,7 +403,6 @@ class Moves:
             if self.Start < 15 or self.Start > 48:
                offsets.append(foward * 2)
             offsets.append(foward)
-
             
         for offset in offsets:
             move = self.Start + offset
@@ -436,13 +436,16 @@ class Moves:
             return moves
 
     def move(self):
-        if self.Side:
+        if self.Side != None:
             moves = []
+            Squares = []
             for Square, i in enumerate(self.Map.PieceMap):
                 if i == self.Piece and self.Map.ColorMap()[Square] == self.Color:
+                    self.Start = Square
+                    Squares += Square
                     match self.Piece:                   
                         case 0:
-                            moves += self.king()         
+                            moves += self.king()
                         case 1:    
                             moves += self.straight()
                             moves += self.diagnal()
@@ -454,10 +457,41 @@ class Moves:
                             moves += self.diagnal()
                         case 5:
                             moves += self.pawn()
-            return moves   
 
+        return [moves, Squares]
+
+    def StartSquare(self, Piece):
+        if self.Piece == None:
+            self.Piece = Piece
+
+        if self.Side != None:
+            moves = []
+            for Square, i in enumerate(self.Map.PieceMap):
+                if i == self.Piece and self.Map.ColorMap()[Square] == self.Color:
+                    self.Start = Square
+                    match self.Piece:                   
+                        case 0:
+                            if self.End in self.king():
+                                return Square
+                        case 1:    
+                            if self.End in self.straight or self.End in self.diagnal:
+                                return Square
+                        case 2:
+                            if self.End in self.straight():
+                                return Square
+                        case 3:
+                            if self.End in self.knight():
+                                return Square
+                        case 4:
+                            if self.End in self.diagnal():
+                                return Square
+                        case 5:
+                            if self.End in self.pawn():
+                                return Square
+        return None
+    
     def leagal(self):
-        return self.End in self.move()
+        return self.StartSquare() != None
 
     
     def duck_leagal(self, Square: square):
@@ -485,13 +519,10 @@ class Castle:
                     return [58, 59]
                 
     def leagal(self):
-        if self.castle() == None:
-            return False
-        else:
-            return True
+        return self.castle() != None
 
 
-        	
+
 class Game:
 
     def __init__(self, Board):
@@ -506,16 +537,21 @@ class Game:
     def start(self):
         while True:
             Input = input('.')
-            move = Decode.PGN_to_Move(Input)
+            move = Decode.PGN_to_Move(Input, self.Board)
+
             if type(move) == int:
                 current_move = Castle(move)
-                if current_move.leagal():
+                """if current_move.leagal():
                     self.push()
             else:
-                current_move = Moves(None, move[0])
+                current_move = Moves(None, move[0], move[1], move[2], self.Board)
+                if current_move.leagal():"""
+
+
+
+                
                 
     def push(self):
         
-
         return
     #add something to make return of `PGN_to_move()` when castle to somthing `Move.castle` can
