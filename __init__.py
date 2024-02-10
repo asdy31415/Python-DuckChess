@@ -1,8 +1,4 @@
-import stat
 import re
-from typing import Self
-
-"""https://medium.com/analytics-vidhya/how-to-create-a-python-library-7d5aea80cc3f"""
 
 square = int
 
@@ -10,10 +6,15 @@ color = int
 
 piece = int
 
+board = list
 
-RANKS_NAME = ["a", "b", "c", "d", "e", "f", "g", "h"]
+class castle:
+    def __init__(self, castle_list = [bool, bool, bool, bool]):
+        self.castle_list = castle_list
 
-FILES_NAME = ["1", "2", "3", "4", "5", "6", "7", "8"]
+RANKS_NAME = ["1", "2", "3", "4", "5", "6", "7", "8"]
+
+FILES_NAME = ["a", "b", "c", "d", "e", "f", "g", "h"]
 
 SQUARES_NAME = [f + r for r in RANKS_NAME for f in FILES_NAME]
 
@@ -42,18 +43,6 @@ PIECETYPES = [t_k, t_q, t_r, t_n, t_b, t_p, t_d, t_space] = range (8)
 
 PIECES = [K, Q, R, N, B, P, k, q, r, n, b, p, d, space] = range(14)
 
-
-DISPLAY = [
-    ".", ".", ".", ".", ".", ".", ".", ".",
-    ".", ".", ".", ".", ".", ".", ".", ".",
-    ".", ".", ".", ".", ".", ".", ".", ".",
-    ".", ".", ".", ".", ".", ".", ".", ".",
-    ".", ".", ".", ".", ".", ".", ".", ".",
-    ".", ".", ".", ".", ".", ".", ".", ".",
-    ".", ".", ".", ".", ".", ".", ".", ".",
-    ".", ".", ".", ".", ".", ".", ".", ".",
-    ]
-
 EMPTY = [
     13,13,13,13,13,13,13,13,
     13,13,13,13,13,13,13,13,
@@ -65,46 +54,47 @@ EMPTY = [
     13,13,13,13,13,13,13,13,
     ]
 
-class Board:
-
-    def __init__(self, B_Board, B_Side, B_Castle, B_Passent, B_HalfClock, B_FullClock):
+class Game:
+    def __init__(self, B_Board: board, B_Side: bool, B_Castle: castle, B_Passent = int, B_HalfClock = int, B_FullClock = int):
     
-        self.B_Board = [
-                B_A1, B_B1, B_C1, B_D1, B_E1, B_F1, B_G1, B_H1,
-                B_A2, B_B2, B_C2, B_D2, B_E2, B_F2, B_G2, B_H2,
-                B_A3, B_B3, B_C3, B_D3, B_E3, B_F3, B_G3, B_H3,
-                B_A4, B_B4, B_C4, B_D4, B_E4, B_F4, B_G4, B_H4,
-                B_A5, B_B5, B_C5, B_D5, B_E5, B_F5, B_G5, B_H5,
-                B_A6, B_B6, B_C6, B_D6, B_E6, B_F6, B_G6, B_H6,
-                B_A7, B_B7, B_C7, B_D7, B_E7, B_F7, B_G7, B_H7,
-                B_A8, B_B8, B_C8, B_D8, B_E8, B_F8, B_G8, B_H8,
-        ] = B_Board
-        self.B_Side = B_Side = bool
+        self.B_Board = B_Board
 
-        self.B_Castle = B_Castle = [bool, bool, bool, bool]
+        self.B_Side = B_Side
+
+        self.B_Castle = B_Castle
     
-        self.B_Passent = B_Passent = int
+        self.B_Passent = B_Passent
 
-        self.B_HalfClock = int
+        self.B_HalfClock = B_HalfClock
 
-        self.B_FullClock = B_FullClock = int
+        self.B_FullClock = B_FullClock
 
-    
- 
-class Decode:
+    def flipSide(self):
+        B_Board = []
+        
+        for i in range(7, -1, -1):
+            B_Board.append(self.B_Board[i * 8:(i + 1) * 8])
+
+        for Square in B_Board:
+            if(Square < 6):
+                Square += 6
+            elif(Square < 12):
+                Square += -6
+
+        FlipedBoard = Game(B_Board, not self.B_Side, [self.B_Castle[2], self.B_Castle[3], self.B_Castle[0], self.B_Castle[1]], self.B_Passent, self.B_HalfClock, self.B_FullClock)
+        return FlipedBoard
+
+class Convertion:
 
     #convert The name of a square to its coordinate
     @staticmethod
-    def SquareN(Square):
-        for i, rank in enumerate(RANKS_NAME):
-            if rank == Square[0].lower():
-                return (int(Square[1]) - 1) * 8 + i
-        return None
+    def SquareNum(Square: str):
+        return SQUARES_NAME.index(Square)
     
     #convert The number of a square to its name        
     @staticmethod
     def SquareName(Square: square):
-        return RANKS_NAME[Decode.Rank(Square)] + FILES_NAME[Decode.File(Square)]
+        return SQUARES_NAME[Square]
 
     #return the square's file
     @staticmethod
@@ -118,22 +108,29 @@ class Decode:
     
     @staticmethod
     def OnEdge(Square: square):
-        return Decode.Rank(Square) in [0, 7] or Decode.File(Square) in [0, 7]
+        return Convertion.Rank(Square) in [0, 7] or Convertion.File(Square) in [0, 7]
+    
+    @staticmethod
+    def Piece_to_Type(Piece: piece):
+        if Piece >= 12:
+            return Piece - 6
+        else:
+            return Piece % 6
 
     @staticmethod
-    def FEN_to_BOARD(fen, part):
+    def FEN_to_BOARD(fen: str, part: int):
         fen_parts = fen.split()
         match part:
             case 0:
-                fen_board = fen_parts[0]
-                board = []
+                fen_board = fen_parts[0][::-1]
+                Board = []
 
                 for char in fen_board:
                     if char.isdigit():
-                        board.extend([13] * int(char))
+                        Board.extend([13] * int(char))
                     elif char in PIECES_NAME:
-                        board.append(PIECES_NAME.index(char))
-                return board
+                        Board.append(PIECES_NAME.index(char))
+                return Board
             case 1:
                 if fen_parts[1] == "w":
                     return 0
@@ -141,22 +138,18 @@ class Decode:
                     return 1
             case 2:
                 fen_castle = fen_parts[2]
-                all_castle = ["K", "Q", "k", "q"]
-                castle = [False, False, False, False]
-                for i, char in enumerate(fen_castle):
-                    if char == all_castle[i]:
-                        castle[i] = True
+                castle = ["K" in fen_parts[2], "Q" in fen_parts[2], "k" in fen_parts[2], "q" in fen_parts[2]]
                 return castle
             case 3:
                 if fen_parts[3] == "-":
                     return None
                 else:
-                    return Decode.SquareN(fen_parts[3])
+                    return Convertion.SquareNum(fen_parts[3])
             case _:
                 return fen_parts[part]
             
     @staticmethod
-    def BOARD_to_FEN(Board):
+    def BOARD_to_FEN(Game: Game):
 
         fen = []
         space_count = None
@@ -164,7 +157,7 @@ class Decode:
         for i in range(64):
             if (i + 1) % 8 == 0:
                 fen.append("/")
-            if Board.Board[i] == 13:
+            if Game.B_Board[i] == 13:
                 space_count += 1
             else:
                 if space_count:
@@ -173,25 +166,26 @@ class Decode:
             fen.appaend(PIECES_NAME[i])
         fen.reverse()
         
-        fen.append(" " + "b" if Board.B_Side else "w")
+        fen.append(" " + "b" if Game.B_Side else "w")
         
         fen.append(" ")
-        fen.append("K" if Board.B_Castle[0] else "")
-        fen.append("Q" if Board.B_Castle[1] else"")
-        fen.append("k" if Board.B_Castle[2] else"")
-        fen.append("q" if Board.B_Castle[3] else"")
+        fen.append("K" if Game.B_Castle[0] else "")
+        fen.append("Q" if Game.B_Castle[1] else"")
+        fen.append("k" if Game.B_Castle[2] else"")
+        fen.append("q" if Game.B_Castle[3] else"")
         
-        fen.append(" " + "-" if not Board.B_Passent else Decode.SquareName(Board.B_Passent))
+        fen.append(" " + "-" if not Game.B_Passent else Convertion.SquareName(Game.B_Passent))
         
-        fen.append(" " + Board.B_HalfClock)
+        fen.append(" " + Game.B_HalfClock)
         
-        fen.append(" " + Board.B_FullClock)
+        fen.append(" " + Game.B_FullClock)
         
         return fen
     
     #return PieceType, PieceColor, Taking a piece or not, where it's going, and duck destination 
     @staticmethod
-    def PGN_to_Move(pgn_move, currentBoard):
+    def PGN_to_Move(pgn_move: str, currentGame: Game):
+        Side = currentGame.B_Side
 
         if pgn_move[0] == "O":
             if pgn_move.count("O") == 2:
@@ -207,126 +201,158 @@ class Decode:
             
         else:
             move = pgn_move.split("@")
-        
-            pattern = r"([NBRQKnbrqk]?)([1-8]?)(x?)([a-h]?[1-8]?)"
+            if move[0][-1] == "#":
+                move = move[0][:-1] 
+            End = Convertion.SquareNum(move[0][-2::])
+            move[0] = move[0][:-2]
+            pattern = r"([NBRQKnbrqk]?)([a-h]?[1-8]?)(x?)"
             match = re.match(pattern, move[0])
 
             if match:
-                Piece, Files, attack, destination = match.groups()
+                Piece, Pos, attack = match.groups()
+                Piece = "P" if Piece else "p"
+                attack = True if attack == "x" else False 
+                Piece = PIECES[eval(Piece)]
 
-                if not Piece:
-                    Piece = "P"
-                Piece = PIECES[Piece]
+            PieceMap = Map(currentGame.B_Board).PieceMap
+            ColorMap = Map(currentGame.B_Board).ColorMap
 
-                if attack == "x":
-                    attack == True
+            Start = []
+
+            for Square, i in enumerate(PieceMap):
+
+                if i == Convertion.Piece_to_Type(Piece) and bool(ColorMap[Square]) == Side:
+                    currentMove = Moves(Square, currentGame.B_Board)
+                    match i:                   
+                        case 0:
+                            if End in currentMove.king(attack):
+                                Start.append(Square)
+                        case 1:    
+                            if End in currentMove.straight(attack) or End in currentMove.diagnal(attack):
+                                Start.append(Square)
+                        case 2:
+                            if End in currentMove.straight(attack):
+                                Start.append(Square)
+                        case 3:
+                            if End in currentMove.knight(attack):
+                                Start.append(Square)
+                        case 4:
+                            if End in currentMove.diagnal(attack):
+                                Start.append(Square)
+                        case 5:
+                            if End in currentMove.pawn(attack):
+                                Start.append(Square)
+            if len(Start) > 1:
+                if Pos.isdigit():
+                    Pos = RANKS_NAME.index(Pos)
+                    for Square in Start:
+                        if Convertion.Rank(Square) == Pos:
+                            Start = Square
                 else:
-                    attack == False    
+                    Pos = FILES_NAME.index(Pos)
+                    for Square in Start:
+                        if Convertion.File(Square) == Pos:
+                            Start = Square
+            else:
+                Start = Start[0]                
 
-            Color = currentBoard.B_Side
+            return [Start, attack, Side, move[1]]
+        
+    @staticmethod
+    def Num_to_DC(Square: square):
+        Color = Square % 2 != 0
+        Coords = [0, 0, 1, 2, 4, 6, 9, 12,
+                  1, 2, 3, 5, 7, 10, 13, 16,
+                  3, 4, 6, 8, 11, 14, 17, 20,
+                  5, 7, 9, 12, 15, 18, 21, 23,
+                  8, 10, 13, 16, 19, 22, 24, 26,
+                  11, 14, 17, 20, 23, 25, 27, 28,
+                  15, 18, 21, 24, 26, 28, 29, 30,
+                  19, 22, 25, 27, 29, 30, 31, 31,]
+        return [Color, Coords[Square]]
+        
+    @staticmethod    
+    def DC_to_Num(Color: bool, DC: int):
+        if Color:
+            Coords = [0, 64, 1, 64, 4, 64, 9, 64,
+                      64, 2, 64, 5, 64, 10, 64, 16,
+                      3, 64, 6, 64, 11, 64, 17, 64,
+                      64, 7, 64, 12, 64, 18, 64, 23,
+                      8, 64, 13, 64, 19, 64, 24, 64,
+                      64, 14, 64, 20, 64, 25, 64, 28,
+                      15, 64, 21, 64, 26, 64, 29, 64,
+                      64, 22, 64, 27, 64, 30, 64, 31,]
+        else:
+            Coords = [64, 0, 64, 2, 64, 6, 64, 12,
+                      1, 64, 3, 64, 7, 64, 13, 64,
+                      64, 4, 64, 8, 64, 14, 64, 20,
+                      5, 64, 9, 64, 15, 64, 21, 64,
+                      64, 10, 64, 16, 64, 22, 64, 26,
+                      11, 64, 17, 64, 23, 64, 27, 64,
+                      64, 18, 64, 24, 64, 28, 64, 30,
+                      19, 64, 25, 64, 29, 64, 31, 64,]
+        return Coords.index(DC)
+    
+    @staticmethod
+    def DCx(Color: bool, DC: int):
+        if Color:
+            Size = [1, 4, 9, 16, 23, 28, 31, 32]
+        else:
+            Size = [2, 6, 12, 20, 26, 30, 32]
 
-            destination = Decode.SquareN(destination)
+        for i, size in enumerate(Size):
+            if size > DC:
+                return i
 
-            return [destination, attack, Color, Files, Piece, move[1]]
+    @staticmethod
+    def DCy(Color: bool, DC: int):
+        x = Convertion.DCx(Color, DC)
 
+        if Color:
+            Size = [3, 0, -5, -20, -12, -19, -24, -27]
+        else:
+            Size = [3, -1, -3, -9, -16, -22, -26, -28]
 
+        return DC + Size[x]
 
 class Map:
 
-    def __init__(self, Board, Color: color):
+    def __init__(self, Board: board):
 
         self.Board = Board
-        self.Color = Color
 
         self.ColorMap = self.ColorType()
         self.PieceMap = self.PieceType()
-        self.AttackedMap = self.Attacked()
-        #self.DeffededMap = self.Deffended()
     
     def ColorType(self): 
         colorMap = list(EMPTY)
         for i, Square in enumerate(self.Board):
-            if Square <= 5:
-                colorMap[i] = 0
-            elif Square <= 11:
-                colorMap[i] = 1
-            elif Square == 12:
-                colorMap[i] = 2
+            if Square >= 12:
+                colorMap[i] += -10
             else:
-                colorMap[i] = 3
+                colorMap[i] = Square // 6
         return colorMap
 
     def PieceType(self):
-        typeMap = list(EMPTY)
-        for i, Square in enumerate(self.Board):
-            if Square == 12:
-                typeMap[i] = 6
-            elif Square == 13:
-                typeMap[i] = 7
-            else:
-                typeMap[i] = Square % 8
-        return typeMap
-    
-    def Attacked(self, Side):
-        if Side != None:
-            attacked = []
-            for i in range(64):
-                if bool(self.ColorMap[i]) == Side and self.ColorMap[i] <= 1:
-                    current_moves = Moves(i, None, None, None, None)
-                    match self.PieceMap[i]:                   
-                        case 0:
-                            attacked += current_moves.king()
-                        case 1:    
-                            attacked += current_moves.straight()
-                            attacked += current_moves.diagnal()
-                        case 2:
-                            attacked += current_moves.straight()
-                        case 3:
-                            attacked += current_moves.knight()
-                        case 4:
-                            attacked += current_moves.diagnal()
-                        case 5:
-                            attacked += current_moves.pawn()
-
-                    current_moves = Moves(i, None, True, None)
-                    match self.PieceMap[i]:                   
-                        case 0:
-                            attacked += current_moves.king()
-                        case 1:    
-                            attacked += current_moves.straight()
-                            attacked += current_moves.diagnal()
-                        case 2:
-                            attacked += current_moves.straight()
-                        case 3:
-                            attacked += current_moves.knight()
-                        case 4:
-                            attacked += current_moves.diagnal()
-                        case 5:
-                            attacked += current_moves.pawn()
-            attacked = list(set(attacked))
-            return attacked
-        else:
-            return
-                
-                               
+        pieceMap = []
+        for i in self.Board:
+            pieceMap.append(Convertion.Piece_to_Type(i))
+        return pieceMap    
 
 class Moves:
     
-    def __init__(self, Start: square, End: square, attack = None, Side = None, board = None):
+    def __init__(self, Start: square, Game: Game):
         
+        self.Board = Game.B_Board
         self.Start = Start
-        self.End = End
-        self.attack = attack
-        self.Side = Side
-        self.board = board 
 
-        self.Map = Map(self.board, None)
+        self.Map = Map(self.Board)
+
+        self.Piece = self.Map.PieceMap
+        self.Color = self.Map.ColorMap
+        self.passent = Game.B_Passent
         
-        if self.Start != None:
-            self.Piece = self.Map.PieceMap()[self.Start]
-            self.Color = self.Map.ColorMap()[self.Start]
-        
-    def diagnal(self):
+    def diagnal(self, attack: bool):
         moves = []
         attacks = [] 
         offsets = [7, -7, 9, -9]
@@ -337,16 +363,16 @@ class Moves:
                 if self.Color[move] == 3:
                     moves.append(move)
                     move += offset
-                elif self.Color[move] == int(not bool(self.Color)):
+                elif self.Color[move] == int(not bool(self.Color[self.Start])):
                     attacks.append(move)
                     break
 
-        if self.attack:
+        if attack:
             return attacks
         else:
             return moves
 
-    def straight(self):
+    def straight(self, attack: bool):
         moves = []
         attacks = [] 
         offsets = [1,-1,8,-8]
@@ -357,16 +383,16 @@ class Moves:
                 if self.Color[move] == 3:
                     moves.append(move)
                     move += offset
-                elif self.Color[move] == int(not bool(self.Color)):
+                elif self.Color[move] == int(not bool(self.Color[self.Start])):
                     attacks.append(move)
                     break
 
-        if self.attack:
+        if attack:
             return attacks
         else:
             return moves
 
-    def knight(self):
+    def knight(self, attack: bool):
         moves = []
         attacks = [] 
         offsets = [6, 10, 15, 17, -6, -10, -15, -17]
@@ -376,27 +402,27 @@ class Moves:
             if move in range(64) and abs(move % 8 - self.Start % 8) <= 2 and abs(move // 8 - self.Start // 8) <= 2:
                 if self.Color[move] == 3:
                     moves.append(move)
-                elif self.Color[move] == int(not bool(self.Color)):
+                elif self.Color[move] == int(not bool(self.Color[self.Start])):
                     attacks.append(move)
 
-        if self.attack:
+        if attack:
             return attacks
         else:
             return moves
     
-    def pawn(self):
+    def pawn(self, attack: bool):
         moves = []
         attacks = []
         offsets = []
         atteck_offsets = [1, -1]
         foward = 0
 
-        if bool(self.Color):
+        if bool(self.Color[self.Start]):
                foward = -8
         else:
                foward = 8
 
-        if self.attack:
+        if attack:
             for offset in atteck_offsets:
                 offsets.append(foward + offset)
         else:
@@ -407,17 +433,17 @@ class Moves:
         for offset in offsets:
             move = self.Start + offset
             if move in range(64) and abs(self.Start % 8 - move % 8) <= 1:
-                if self.Color[move] == 3:
+                if self.Color[move] == 3 and not attack:
                     moves.append(move)
-                elif self.Color[move] == int(not bool(self.Color)):
+                if self.Color[move] == int(not bool(self.Color[self.Start])) or self.passent == move:
                     attacks.append(move)
         
-        if self.attack:
+        if attack:
             return attacks
         else:
             return moves
 
-    def king(self):
+    def king(self, attack: bool):
         moves = []
         attacks = []
         offsets = [-9, -8, -7, -1 , 1, 7, 8, 9]
@@ -425,133 +451,60 @@ class Moves:
         for offset in offsets:
             move = self.Start + offset
             if move in range(64) and (abs(move // 8 - self.Start // 8) <= 1 or abs(move % 8 - self.Start % 8) <= 1):
-                if self.Map.ColorMap()[move] == 3:
+                if self.Color[move] == 3:
                     moves.append(move)
-                elif self.Map.ColorMap()[move] == int(not bool(self.Color)):
+                elif self.Color[move] == int(not bool(self.Color[self.Start])):
                     attacks.append(move)
 
-        if self.attack:
+        if attack:
             return attacks
         else:
             return moves
-
-    def move(self):
-        if self.Side != None:
-            moves = []
-            Squares = []
-            for Square, i in enumerate(self.Map.PieceMap):
-                if i == self.Piece and self.Map.ColorMap()[Square] == self.Color:
-                    self.Start = Square
-                    Squares += Square
-                    match self.Piece:                   
-                        case 0:
-                            moves += self.king()
-                        case 1:    
-                            moves += self.straight()
-                            moves += self.diagnal()
-                        case 2:
-                            moves += self.straight()
-                        case 3:
-                            moves += self.knight()
-                        case 4:
-                            moves += self.diagnal()
-                        case 5:
-                            moves += self.pawn()
-
-        return [moves, Squares]
-
-    def StartSquare(self, Piece):
-        if self.Piece == None:
-            self.Piece = Piece
-
-        if self.Side != None:
-            moves = []
-            for Square, i in enumerate(self.Map.PieceMap):
-                if i == self.Piece and self.Map.ColorMap()[Square] == self.Color:
-                    self.Start = Square
-                    match self.Piece:                   
-                        case 0:
-                            if self.End in self.king():
-                                return Square
-                        case 1:    
-                            if self.End in self.straight or self.End in self.diagnal:
-                                return Square
-                        case 2:
-                            if self.End in self.straight():
-                                return Square
-                        case 3:
-                            if self.End in self.knight():
-                                return Square
-                        case 4:
-                            if self.End in self.diagnal():
-                                return Square
-                        case 5:
-                            if self.End in self.pawn():
-                                return Square
-        return None
-    
-    def leagal(self):
-        return self.StartSquare() != None
-
-    
+        
     def duck_leagal(self, Square: square):
         return self.Piece(Square) == 7
     
-
-
-class Castle:
-    def __init__(self, castle):
-        self.castle = castle
+    def leagal(self, End: square, attack: bool):
+        match self.Piece[self.Start]:                   
+            case 0:
+                if End in self.king(attack):
+                    return True
+            case 1:    
+                if End in self.straight(attack) or End in self.diagnal(attack):
+                    return True
+            case 2:
+                if End in self.straight(attack):
+                    return True
+            case 3:
+                if End in self.knight(attack):
+                    return True
+            case 4:
+                if End in self.diagnal(attack):
+                    return True
+            case 5:
+                if End in self.pawn(attack):
+                    return True
+        
     
-    def castle(self, castle_type):
+class Castle:
+    def __init__(self, Game: Game):
+        self.Game = Game
+        self.ColorMap = Map.ColorMap(Game.B_Board)
+    
+    def castling(self, castle_type):
         match castle_type:
             case 0:
-                if all(Color == 3 for Color in self.Map.ColorMap()[5:6] and self.board.B_Castle[castle_type]):
+                if all(Color == 3 for Color in self.ColorMap()[5:6] and self.Game.B_Castle[castle_type]):
                     return [6, 5]
             case 1:
-                if all(Color == 3 for Color in self.Map.ColorMap()[1:3] and self.board.B_Castle[castle_type]):    
+                if all(Color == 3 for Color in self.ColorMap()[1:3] and self.Game.B_Castle[castle_type]):    
                     return [2, 3]
             case 2:
-                if all(Color == 3 for Color in self.Map.ColorMap()[61:62] and self.board.B_Castle[castle_type]):
+                if all(Color == 3 for Color in self.ColorMap()[61:62] and self.Game.B_Castle[castle_type]):
                     return [62, 61]
             case 3:
-                if all(Color == 3 for Color in self.Map.ColorMap()[57:59] and self.board.B_Castle[castle_type]):
+                if all(Color == 3 for Color in self.ColorMap()[57:59] and self.Game.B_Castle[castle_type]):
                     return [58, 59]
                 
-    def leagal(self):
-        return self.castle() != None
-
-
-
-class Game:
-
-    def __init__(self, Board):
-        self.Board = Board
-
-    def clear(self):
-        self.Board = list(EMPTY)
-
-    def fen_import(self, fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"):
-        self.Board.B_Board = Decode.FEN_to_BOARD(fen)
-
-    def start(self):
-        while True:
-            Input = input('.')
-            move = Decode.PGN_to_Move(Input, self.Board)
-
-            if type(move) == int:
-                current_move = Castle(move)
-                """if current_move.leagal():
-                    self.push()
-            else:
-                current_move = Moves(None, move[0], move[1], move[2], self.Board)
-                if current_move.leagal():"""
-
-
-
-                
-                
-    def push(self):
-        
-        return
-    #add something to make return of `PGN_to_move()` when castle to somthing `Move.castle` can
+    def leagal(self, castle_type):
+        return self.castling(castle_type) != None
