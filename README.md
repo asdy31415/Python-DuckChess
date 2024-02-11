@@ -1,2 +1,2 @@
 # Python-DuckChess
-DuckChess Python library for building a duck chess engine
+DuckChess Python package for building a duck chess engine
