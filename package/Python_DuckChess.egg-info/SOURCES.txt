@@ -1,0 +1,8 @@
+LICENSE
+README.md
+setup.py
+DuckChess/__init__.py
+Python_DuckChess.egg-info/PKG-INFO
+Python_DuckChess.egg-info/SOURCES.txt
+Python_DuckChess.egg-info/dependency_links.txt
+Python_DuckChess.egg-info/top_level.txt

@@ -8,8 +8,5 @@ setup(
     author_email='asdy31415@email.com',
     description='A small, not very convenient python package for duck chess',
     url='https://github.com/asdy31415/Python-DuckChess',
-    install_requires=[
-        'python_version >= "3.10"',
-        're;',
-    ],
+    python_requires='>=3.10',
 )
