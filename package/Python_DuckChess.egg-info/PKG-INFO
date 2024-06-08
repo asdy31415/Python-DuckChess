@@ -1,9 +1,0 @@
-Metadata-Version: 2.1
-Name: Python-DuckChess
-Version: 0.1.0
-Summary: A small, not very convenient python package for duck chess
-Home-page: https://github.com/asdy31415/Python-DuckChess
-Author: Just_A_Pi
-Author-email: asdy31415@email.com
-Requires-Python: >=3.10
-License-File: LICENSE
