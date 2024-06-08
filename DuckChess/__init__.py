@@ -8,10 +8,6 @@ piece = int
 
 board = list
 
-class castle:
-    def __init__(self, castle_list = [bool, bool, bool, bool]):
-        self.castle_list = castle_list
-
 RANKS_NAME = ["1", "2", "3", "4", "5", "6", "7", "8"]
 
 FILES_NAME = ["a", "b", "c", "d", "e", "f", "g", "h"]
@@ -55,7 +51,7 @@ EMPTY = [
     ]
 
 class Game:
-    def __init__(self, B_Board: board, B_Side: bool, B_Castle: castle, B_Passent = int, B_HalfClock = int, B_FullClock = int):
+    def __init__(self, B_Board: board, B_Side: bool, B_Castle: list, B_Passent = int, B_HalfClock = int, B_FullClock = int):
     
         self.B_Board = B_Board
 
@@ -122,7 +118,8 @@ class Convertion:
         fen_parts = fen.split()
         match part:
             case 0:
-                fen_board = fen_parts[0][::-1]
+                fen_parts[0] = fen_parts[0].split("/")
+                fen_board = "".join(fen_parts[0][::-1])
                 Board = []
 
                 for char in fen_board:
@@ -137,7 +134,6 @@ class Convertion:
                 else:
                     return 1
             case 2:
-                fen_castle = fen_parts[2]
                 castle = ["K" in fen_parts[2], "Q" in fen_parts[2], "k" in fen_parts[2], "q" in fen_parts[2]]
                 return castle
             case 3:
@@ -259,6 +255,19 @@ class Convertion:
             return [Start, attack, Side, move[1]]
         
     @staticmethod
+    def FEN_to_GAME(fen: str) -> Game:
+    # Parse the FEN string to get the board state
+        B_Board = Convertion.FEN_to_BOARD(fen, 0)
+        B_Side = Convertion.FEN_to_BOARD(fen, 1)
+        B_Castle = Convertion.FEN_to_BOARD(fen, 2)
+        B_Passent = Convertion.FEN_to_BOARD(fen, 3) if Convertion.FEN_to_BOARD(fen, 3) is not None else -1
+        B_HalfClock = int(Convertion.FEN_to_BOARD(fen, 4))
+        B_FullClock = int(Convertion.FEN_to_BOARD(fen, 5))
+    
+    # Create and return a Game object
+        return Game(B_Board, B_Side, B_Castle, B_Passent, B_HalfClock, B_FullClock)    
+        
+    @staticmethod
     def Num_to_DC(Square: square):
         Color = Square % 2 != 0
         Coords = [0, 0, 1, 2, 4, 6, 9, 12,
@@ -366,6 +375,8 @@ class Moves:
                 elif self.Color[move] == int(not bool(self.Color[self.Start])):
                     attacks.append(move)
                     break
+                elif self.Color[move] == self.Color[self.Start]:
+                    break
 
         if attack:
             return attacks
@@ -385,6 +396,8 @@ class Moves:
                     move += offset
                 elif self.Color[move] == int(not bool(self.Color[self.Start])):
                     attacks.append(move)
+                    break
+                elif self.Color[move] == self.Color[self.Start]:
                     break
 
         if attack:
@@ -426,7 +439,7 @@ class Moves:
             for offset in atteck_offsets:
                 offsets.append(foward + offset)
         else:
-            if self.Start < 15 or self.Start > 48:
+            if (self.Start <= 15 or self.Start >= 48) and self.Color[self.Start + foward] == 3:
                offsets.append(foward * 2)
             offsets.append(foward)
             
@@ -489,22 +502,23 @@ class Moves:
 class Castle:
     def __init__(self, Game: Game):
         self.Game = Game
-        self.ColorMap = Map.ColorMap(Game.B_Board)
+        map = Map(Game.B_Board)
+        self.ColorMap = map.ColorMap
     
     def castling(self, castle_type):
         match castle_type:
             case 0:
-                if all(Color == 3 for Color in self.ColorMap()[5:6] and self.Game.B_Castle[castle_type]):
-                    return [6, 5]
+                if all(Color == 3 for Color in self.ColorMap[5:6]) and self.Game.B_Castle[castle_type]:
+                    return [6, 5, 4, 7]
             case 1:
-                if all(Color == 3 for Color in self.ColorMap()[1:3] and self.Game.B_Castle[castle_type]):    
-                    return [2, 3]
+                if all(Color == 3 for Color in self.ColorMap[1:3]) and self.Game.B_Castle[castle_type]:    
+                    return [2, 3, 4, 0]
             case 2:
-                if all(Color == 3 for Color in self.ColorMap()[61:62] and self.Game.B_Castle[castle_type]):
-                    return [62, 61]
+                if all(Color == 3 for Color in self.ColorMap[61:62]) and self.Game.B_Castle[castle_type]:
+                    return [62, 61, 60, 63]
             case 3:
-                if all(Color == 3 for Color in self.ColorMap()[57:59] and self.Game.B_Castle[castle_type]):
-                    return [58, 59]
+                if all(Color == 3 for Color in self.ColorMap[57:59]) and self.Game.B_Castle[castle_type]:
+                    return [58, 59, 60, 56]
                 
     def leagal(self, castle_type):
         return self.castling(castle_type) != None

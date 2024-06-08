@@ -88,30 +88,30 @@ class Convertion:
 
     #convert The name of a square to its coordinate
     @staticmethod
-    def SquareNum(Square: str):
+    def SquareNum(Square: str) -> int:
         return SQUARES_NAME.index(Square)
     
     #convert The number of a square to its name        
     @staticmethod
-    def SquareName(Square: square):
+    def SquareName(Square: square) -> str:
         return SQUARES_NAME[Square]
 
     #return the square's file
     @staticmethod
-    def File(Square: square):
+    def File(Square: square) -> int:
         return Square % 8
 	
     #return the square's rank
     @staticmethod
-    def Rank(Square: square):
+    def Rank(Square: square) -> int:
         return Square // 8
     
     @staticmethod
-    def OnEdge(Square: square):
+    def OnEdge(Square: square) -> bool:
         return Convertion.Rank(Square) in [0, 7] or Convertion.File(Square) in [0, 7]
     
     @staticmethod
-    def Piece_to_Type(Piece: piece):
+    def Piece_to_Type(Piece: piece) -> int:
         if Piece >= 12:
             return Piece - 6
         else:
@@ -150,7 +150,6 @@ class Convertion:
             
     @staticmethod
     def BOARD_to_FEN(Game: Game):
-
         fen = []
         space_count = None
         
