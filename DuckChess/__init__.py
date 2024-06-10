@@ -312,27 +312,28 @@ class Convertion:
     #diagnal coordinate x
     @staticmethod
     def DCx(Color: bool, DC: int):
-        if Color:
-            Size = [1, 4, 9, 16, 23, 28, 31, 32]
-        else:
-            Size = [2, 6, 12, 20, 26, 30, 32]
-
-        for i, size in enumerate(Size):
-            if size > DC:
-                return i
+        Coords = [0, 0, 1, 1, 2, 2, 3, 3,
+                  0, 1, 1, 2, 2, 3, 3, 4,
+                  1, 1, 2, 2, 3, 3, 4, 4,
+                  1, 2, 2, 3, 3, 4, 4, 5,
+                  2, 2, 3, 3, 4, 4, 5, 5,
+                  2, 3, 3, 4, 4, 5, 5, 6,
+                  3, 3, 4, 4, 5, 5, 6, 6,
+                  3, 4, 4, 5, 5, 6, 6, 7,]
+        return Coords[DC]
 
     #diagnal coordinate y
     @staticmethod
     def DCy(Color: bool, DC: int):
-        x = Convertion.DCx(Color, DC)
-
-        if Color:
-            Size = [3, 0, -5, -20, -12, -19, -24, -27]
-        else:
-            Size = [3, -1, -3, -9, -16, -22, -26, -28]
-
-        return DC + Size[x]
-
+        Coords = [3, 3, 2, 2, 1, 1, 0, 0,
+                  4, 3, 3, 2, 2, 1, 1, 0,
+                  4, 4, 3, 3, 2, 2, 1, 1,
+                  5, 4, 4, 3, 3, 2, 2, 1,
+                  5, 5, 4, 4, 3, 3, 2, 2,
+                  6, 5, 5, 4, 4, 3, 3, 2,
+                  6, 6, 5, 5, 4, 4, 3, 3,
+                  7, 6, 6, 5, 5, 4, 4, 3,]
+        return Coords[DC]
 #create list of color and piece type
 class Map:
     def __init__(self, Board: board):
