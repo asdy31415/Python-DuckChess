@@ -650,7 +650,8 @@ def generate_all_moves(current_game: Game):
         if castle.leagal(i):
             new_game_state = deepcopy(current_game)
             castle_moves = castle.castling(i)
-            for j in range(2) + int(current_side) << 1:
+            for j in range(2):
+                j += int(current_side) << 1
                 new_game_state.G_Castle[j] == False
             if castle_moves:
                 new_game_state.G_Board[castle_moves[0]] = new_game_state.G_Board[castle_moves[2]]
